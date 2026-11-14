@@ -6,30 +6,40 @@
   <meta name="robots" content="noindex" />
   <title>NioroTV Dashboard</title>
   <style>
-    :root{--bg:#0c041a;--surface:#180933;--card:#230f47;--glow:#a855f7;--accent:#c084fc;--muted:#a799c2;--border:#361c66;--ok:#4ade80;--warn:#fbbf24}
+    :root{--bg:#0c041a;--surface:#180933;--card:#230f47;--glow:#a855f7;--accent:#c084fc;--muted:#a799c2;--border:#361c66;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171}
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:radial-gradient(circle at top right,#260d54 0%,var(--bg) 60%);color:#f8fafc;min-height:100vh;padding:1.25rem}
     h1{font-size:1.4rem} h2{font-size:1.02rem;color:#f3e8ff;margin-bottom:.6rem} .muted{color:var(--muted);font-size:.85rem}
-    .btn{background:linear-gradient(135deg,#7e22ce,#581c87);color:#fff;border:1px solid var(--glow);padding:.45rem .9rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.88rem}
-    .btn.sec{background:var(--surface);border-color:var(--border)} .btn.red{background:#7f1d1d;border-color:#ef4444}
+    .btn{background:linear-gradient(135deg,#7e22ce,#581c87);color:#fff;border:1px solid var(--glow);padding:.45rem .9rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.85rem}
+    .btn.sec{background:var(--surface);border-color:var(--border)} .btn.red{background:#7f1d1d;border-color:#ef4444} .btn.sm{padding:.25rem .6rem;font-size:.78rem}
     .top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;margin-bottom:1.2rem}
+    .tools{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
     .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-bottom:1.2rem}
     .tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem}
-    .tile .n{font-size:1.7rem;font-weight:800;color:var(--accent)} .tile .l{font-size:.78rem;color:var(--muted)}
+    .tile .n{font-size:1.7rem;font-weight:800;color:var(--accent)} .tile .l{font-size:.78rem;color:var(--muted)} .tile .d{font-size:.75rem;margin-top:.15rem}
+    .up{color:var(--ok)} .down{color:var(--bad)} .flat{color:var(--muted)}
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1rem;margin-bottom:1rem}
     .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem;overflow:auto}
-    table{width:100%;border-collapse:collapse} th,td{text-align:left;padding:.45rem .5rem;border-bottom:1px solid var(--border);font-size:.86rem;vertical-align:top} th{color:var(--accent);font-weight:600}
+    table{width:100%;border-collapse:collapse} th,td{text-align:left;padding:.45rem .5rem;border-bottom:1px solid var(--border);font-size:.85rem;vertical-align:top} th{color:var(--accent);font-weight:600;white-space:nowrap}
+    tr.click{cursor:pointer} tr.click:hover{background:var(--card)}
     .bar{display:flex;align-items:center;gap:.5rem;margin:.28rem 0;font-size:.84rem}
     .bar .name{width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .bar .track{flex:1;background:var(--bg);border-radius:6px;height:14px;overflow:hidden}
-    .bar .fill{height:100%;background:linear-gradient(90deg,#7e22ce,#c084fc)} .bar .val{width:3.2rem;text-align:right;color:var(--muted)}
-    .hours{display:flex;align-items:flex-end;gap:3px;height:110px}
-    .hours div{flex:1;background:linear-gradient(180deg,#c084fc,#7e22ce);border-radius:3px 3px 0 0;min-height:2px}
-    .hlab{display:flex;gap:3px;font-size:.65rem;color:var(--muted)} .hlab span{flex:1;text-align:center}
+    .bar .fill{height:100%;background:linear-gradient(90deg,#7e22ce,#c084fc)} .bar .val{width:3.4rem;text-align:right;color:var(--muted)}
+    .cols{display:flex;align-items:flex-end;gap:3px;height:130px}
+    .cols div{flex:1;background:linear-gradient(180deg,#c084fc,#7e22ce);border-radius:3px 3px 0 0;min-height:2px}
+    .clab{display:flex;gap:3px;font-size:.62rem;color:var(--muted);margin-top:2px} .clab span{flex:1;text-align:center;white-space:nowrap;overflow:hidden}
     .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:.4rem}
-    .tag{padding:.1rem .45rem;border-radius:999px;font-size:.72rem;font-weight:700} .tag.new{background:#713f12;color:#fde68a} .tag.done{background:#14532d;color:#bbf7d0}
+    .tag{padding:.1rem .45rem;border-radius:999px;font-size:.72rem;font-weight:700;white-space:nowrap}
+    .tag.new{background:#713f12;color:#fde68a}.tag.done{background:#14532d;color:#bbf7d0}.tag.active{background:#14532d;color:#bbf7d0}.tag.inactive{background:#3f3f46;color:#d4d4d8}.tag.fresh{background:#1e3a8a;color:#bfdbfe}
+    .chip{display:inline-block;background:var(--card);border:1px solid var(--glow);color:var(--accent);border-radius:999px;padding:.05rem .5rem;font-size:.72rem;margin-left:.3rem;white-space:nowrap}
     .zero{color:var(--warn)} select{background:var(--surface);color:#fff;border:1px solid var(--border);border-radius:8px;padding:.4rem}
+    .seg button{background:var(--surface);color:var(--muted);border:1px solid var(--border);padding:.25rem .6rem;font-size:.78rem;cursor:pointer}
+    .seg button:first-child{border-radius:8px 0 0 8px}.seg button:last-child{border-radius:0 8px 8px 0}.seg button.on{background:#7e22ce;color:#fff;border-color:var(--glow)}
     #login,#denied{max-width:380px;margin:12vh auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;text-align:center}
     #app{display:none} .empty{color:var(--muted);font-size:.85rem;padding:.4rem 0}
+    #modal{display:none;position:fixed;inset:0;background:rgba(5,1,12,.8);z-index:50;overflow:auto;padding:1.2rem}
+    #modal .box{max-width:860px;margin:2vh auto;background:var(--surface);border:1px solid var(--glow);border-radius:16px;padding:1.2rem}
+    .tl{max-height:300px;overflow:auto} .tl div{padding:.28rem 0;border-bottom:1px solid var(--border);font-size:.84rem}
   </style>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -43,27 +53,49 @@
   <div id="app">
     <div class="top">
       <div><h1>NioroTV Dashboard</h1><div class="muted" id="who"></div></div>
-      <div style="display:flex;gap:.6rem;align-items:center">
-        <select id="range"><option value="1">Last 24 hours</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option></select>
+      <div class="tools">
+        <select id="range"><option value="1">Last 24 hours</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>
+        <button class="btn sec" id="expV">⬇ Viewers CSV</button><button class="btn sec" id="expE">⬇ Activity CSV</button>
         <button class="btn sec" onclick="firebase.auth().signOut()">Sign out</button>
       </div>
     </div>
     <div class="tiles" id="tiles"></div>
+
+    <div class="grid">
+      <div class="panel" style="grid-column:1/-1">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.4rem"><h2 style="margin:0">Trends</h2>
+          <div class="seg" id="metric"><button data-m="plays" class="on">Plays</button><button data-m="hours">Watch hours</button><button data-m="active">Active viewers</button><button data-m="fresh">New viewers</button></div></div>
+        <div class="cols" id="trend"></div><div class="clab" id="trendLab"></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel" style="border-color:var(--warn)"><h2>🎯 Channels to add (unmet demand)</h2><div class="muted" style="margin-bottom:.4rem">Searches that returned nothing, plus requests. Chips suggest a <code>config.json</code> change.</div><div id="demand"></div></div>
+      <div class="panel"><h2>Requests</h2><div id="requests"></div></div>
+      <div class="panel"><h2>All searches</h2><div id="searches"></div></div>
+    </div>
+
     <div class="grid">
       <div class="panel"><h2>Watching now</h2><div id="now"></div></div>
-      <div class="panel"><h2>Activity by hour (plays, your local time)</h2><div class="hours" id="hours"></div><div class="hlab" id="hlab"></div></div>
+      <div class="panel"><h2>Audience: countries <span class="muted">(estimated from time zone)</span></h2><div id="aCountry"></div></div>
+      <div class="panel"><h2>Audience: languages &amp; devices</h2><div id="aLang"></div><div style="height:.6rem"></div><div id="aDev"></div></div>
     </div>
+
     <div class="grid">
       <div class="panel"><h2>Top channels (plays)</h2><div id="topCh"></div></div>
       <div class="panel"><h2>Top channels (watch time)</h2><div id="topChTime"></div></div>
       <div class="panel"><h2>Top groups</h2><div id="topG"></div></div>
+      <div class="panel"><h2>Busiest hours (plays, your local time)</h2><div class="cols" id="hours"></div><div class="clab" id="hlab"></div></div>
     </div>
+
     <div class="grid">
-      <div class="panel"><h2>What viewers search for</h2><div class="muted" style="margin-bottom:.4rem">Amber = no results: unmet demand.</div><div id="searches"></div></div>
-      <div class="panel"><h2>Requests</h2><div id="requests"></div></div>
+      <div class="panel"><h2>⚠ Alerts</h2><div id="alerts"></div></div>
     </div>
-    <div class="panel"><h2>Viewers</h2><div id="viewers"></div></div>
+
+    <div class="panel"><h2>Viewers <span class="muted">(click a row for details)</span></h2><div id="viewers"></div></div>
   </div>
+
+  <div id="modal"><div class="box" id="modalBox"></div></div>
 
   <script>
     const cfg = window.FIREBASE_CONFIG || {};
@@ -71,17 +103,38 @@
     const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     const fmtDur = (s) => { s = Math.round(s || 0); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return h ? `${h}h ${m}m` : `${m}m`; };
     const ago = (t) => { if (!t) return "—"; const m = Math.round((Date.now() - t) / 60000); if (m < 1) return "just now"; if (m < 60) return m + " min ago"; const h = Math.round(m / 60); return h < 48 ? h + " h ago" : Math.round(h / 24) + " d ago"; };
+    const DAY = 86400000;
+
+    // ---- country from time zone (estimate) ----
+    const TZC = { "Africa/Dakar": "Senegal", "Africa/Abidjan": "Côte d'Ivoire", "Africa/Bamako": "Mali", "Africa/Banjul": "Gambia", "Africa/Conakry": "Guinea", "Africa/Casablanca": "Morocco", "Africa/Lagos": "Nigeria", "Africa/Algiers": "Algeria", "Africa/Tunis": "Tunisia", "Africa/Douala": "Cameroon", "Africa/Accra": "Ghana", "Africa/Nouakchott": "Mauritania",
+      "Europe/Paris": "France", "Europe/Rome": "Italy", "Europe/London": "United Kingdom", "Europe/Madrid": "Spain", "Europe/Berlin": "Germany", "Europe/Brussels": "Belgium", "Europe/Zurich": "Switzerland", "Europe/Lisbon": "Portugal", "Europe/Amsterdam": "Netherlands",
+      "America/Toronto": "Canada", "America/Montreal": "Canada", "America/Vancouver": "Canada", "America/Sao_Paulo": "Brazil", "America/Port-au-Prince": "Haiti", "Asia/Dubai": "UAE" };
+    function countryOf(tz) {
+      if (!tz) return "Unknown";
+      if (TZC[tz]) return TZC[tz];
+      if (/^America\/(New_York|Chicago|Denver|Phoenix|Los_Angeles|Anchorage|Detroit|Boise|Indiana|Kentucky|Juneau)/.test(tz) || tz === "Pacific/Honolulu") return "United States";
+      return tz;
+    }
+    const LANGN = { en: "English", fr: "French", it: "Italian", es: "Spanish", ar: "Arabic", pt: "Portuguese", de: "German", wo: "Wolof" };
+    const langOf = (l) => l ? (LANGN[String(l).slice(0, 2).toLowerCase()] || l) : "Unknown";
+
+    // ---- lineup hints for searches ----
+    const HINTS = [[/wolof|wolo/, "language", "wol"], [/arab|arabe/, "language", "ara"], [/ital/, "language", "ita"], [/spanish|espa|español/, "language", "spa"], [/portug/, "language", "por"], [/english|anglais/, "language", "eng"], [/french|fran[cç]/, "language", "fra"], [/pulaar|peul|fula/, "language", "ful"], [/bambara/, "language", "bam"],
+      [/senegal|sénégal|dakar/, "country", "sn"], [/mali\b|bamako/, "country", "ml"], [/gambia|gambie/, "country", "gm"], [/guinea|guin[eé]e/, "country", "gn"], [/ivory|ivoire|abidjan/, "country", "ci"], [/morocc|maroc/, "country", "ma"], [/nigeria/, "country", "ng"], [/ital(y|ia)\b|rai\b/, "country", "it"], [/ghana/, "country", "gh"], [/cameroon|cameroun/, "country", "cm"], [/algeri|alg[eé]rie/, "country", "dz"], [/tunisi/, "country", "tn"], [/brazil|brasil|br[eé]sil/, "country", "br"], [/haiti|ha[iï]ti/, "country", "ht"], [/canada/, "country", "ca"], [/uk\b|britain|bbc/, "country", "gb"], [/spain|espagne/, "country", "es"], [/portugal/, "country", "pt"], [/germany|allemagne/, "country", "de"],
+      [/sport|foot|soccer|basket|nba|nfl|lutte/, "category", "sports"], [/news|info|actu/, "category", "news"], [/movie|film|cin[eé]ma/, "category", "movies"], [/music|musique|musica/, "category", "music"], [/kids|enfant|cartoon|dessin/, "category", "kids"], [/doc/, "category", "documentary"], [/religi|quran|coran|islam|church|gospel/, "category", "religious"], [/comedy|com[eé]die/, "category", "comedy"]];
+    const hintsFor = (q) => HINTS.filter((h) => h[0].test(q)).map((h) => `${h[1]}: ${h[2]}`);
 
     if (!cfg.apiKey || String(cfg.apiKey).startsWith("PASTE")) {
-      $("loginMsg").textContent = "Firebase isn't configured yet (firebase-config.js).";
-      $("signin").disabled = true;
+      $("loginMsg").textContent = "Firebase isn't configured yet (firebase-config.js)."; $("signin").disabled = true;
     } else {
       firebase.initializeApp(cfg);
       const auth = firebase.auth(), db = firebase.database();
-      let listeners = [], evStop = null, data = { viewers: {}, presence: {}, events: [], requests: {} };
+      let listeners = [], evStop = null, data = blank(), metric = "plays";
+      function blank() { return { viewers: {}, presence: {}, events: [], requests: {}, devices: {} }; }
 
       $("signin").onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch((e) => ($("loginMsg").textContent = e.message));
       $("range").onchange = () => { if (auth.currentUser) startEvents(); };
+      $("metric").onclick = (e) => { const b = e.target.closest("button[data-m]"); if (!b) return; metric = b.dataset.m; [...$("metric").children].forEach((x) => x.classList.toggle("on", x === b)); render(); };
 
       auth.onAuthStateChanged(async (user) => {
         stopAll();
@@ -93,66 +146,162 @@
         listen("viewers", (v) => { data.viewers = v || {}; render(); });
         listen("presence", (v) => { data.presence = v || {}; render(); });
         listen("requests", (v) => { data.requests = v || {}; render(); });
+        listen("devices", (v) => { data.devices = v || {}; render(); }, true);
         startEvents();
       });
 
-      function listen(path, cb) { const r = db.ref(path); const f = r.on("value", (s) => cb(s.val())); listeners.push(() => r.off("value", f)); }
+      function listen(path, cb, soft) { const r = db.ref(path); const f = r.on("value", (s) => cb(s.val()), () => { if (soft) cb(null); }); listeners.push(() => r.off("value", f)); }
       function startEvents() {
         if (evStop) evStop();
-        const since = Date.now() - Number($("range").value) * 86400000;
-        const q = db.ref("events").orderByChild("t").startAt(since).limitToLast(8000);
+        const since = Date.now() - 2 * Number($("range").value) * DAY; // current + previous period
+        const q = db.ref("events").orderByChild("t").startAt(since).limitToLast(25000);
         const f = q.on("value", (s) => { const arr = []; s.forEach((c) => { arr.push(c.val()); }); data.events = arr; render(); });
         evStop = () => q.off("value", f); listeners.push(evStop);
       }
-      function stopAll() { listeners.forEach((f) => f()); listeners = []; evStop = null; data = { viewers: {}, presence: {}, events: [], requests: {} }; }
+      function stopAll() { listeners.forEach((f) => f()); listeners = []; evStop = null; data = blank(); }
 
+      const rangeDays = () => Number($("range").value);
+      const sinceNow = () => Date.now() - rangeDays() * DAY;
       function top(map, n) { return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, n); }
       function bars(el, rows, fmt) {
         if (!rows.length) { el.innerHTML = '<div class="empty">No data yet.</div>'; return; }
         const max = rows[0][1] || 1;
         el.innerHTML = rows.map(([k, v]) => `<div class="bar"><div class="name" title="${esc(k)}">${esc(k)}</div><div class="track"><div class="fill" style="width:${Math.max(3, (v / max) * 100)}%"></div></div><div class="val">${fmt ? fmt(v) : v}</div></div>`).join("");
       }
+      function stats(evs) {
+        const s = { active: new Set(), plays: 0, secs: 0, visits: 0, zero: 0 };
+        evs.forEach((e) => { s.active.add(e.v); if (e.type === "play") s.plays++; else if (e.type === "watch") s.secs += e.secs || 0; else if (e.type === "visit") s.visits++; else if (e.type === "search" && !e.res) s.zero++; });
+        return s;
+      }
+      function delta(cur, prev) {
+        if (!prev && !cur) return '<span class="flat">–</span>';
+        if (!prev) return '<span class="up">new</span>';
+        const p = Math.round(((cur - prev) / prev) * 100);
+        return `<span class="${p > 0 ? "up" : p < 0 ? "down" : "flat"}">${p > 0 ? "▲" : p < 0 ? "▼" : "•"} ${Math.abs(p)}% vs previous</span>`;
+      }
 
       function render() {
-        const ev = data.events, plays = ev.filter((e) => e.type === "play"), watch = ev.filter((e) => e.type === "watch");
-        const secs = watch.reduce((a, e) => a + (e.secs || 0), 0);
-        const active = new Set(ev.map((e) => e.v)).size, presence = Object.entries(data.presence);
-        const reqNew = Object.values(data.requests).filter((r) => r.status === "new").length;
+        const since = sinceNow(), prevSince = since - rangeDays() * DAY;
+        const all = data.events;
+        const cur = all.filter((e) => e.t >= since), prev = all.filter((e) => e.t >= prevSince && e.t < since);
+        const sc = stats(cur), sp = stats(prev);
+        const prevSet = sp.active, newSet = new Set([...sc.active].filter((v) => !prevSet.has(v)));
+        const presence = Object.entries(data.presence), reqNew = Object.values(data.requests).filter((r) => r.status === "new").length;
+        const tile = (n, l, d) => `<div class="tile"><div class="n">${esc(n)}</div><div class="l">${l}</div><div class="d">${d || ""}</div></div>`;
         $("tiles").innerHTML = [
-          [Object.keys(data.viewers).length, "Registered viewers seen"], [active, "Active in range"], [presence.length, "Watching / online now"],
-          [plays.length, "Channel plays"], [fmtDur(secs), "Total watch time"], [reqNew, "New requests"]
-        ].map(([n, l]) => `<div class="tile"><div class="n">${esc(n)}</div><div class="l">${l}</div></div>`).join("");
+          tile(sc.active.size, "Active viewers", delta(sc.active.size, sp.active.size)),
+          tile(newSet.size, "New (not seen last period)", ""),
+          tile(sc.active.size - newSet.size, "Returning", ""),
+          tile(sc.visits, "Sessions", delta(sc.visits, sp.visits)),
+          tile(sc.plays, "Channel plays", delta(sc.plays, sp.plays)),
+          tile(fmtDur(sc.secs), "Watch time", delta(sc.secs, sp.secs)),
+          tile(presence.length, "Online now", ""),
+          tile(sc.zero, "Searches with no results", delta(sc.zero, sp.zero)),
+          tile(reqNew, "New requests", "")
+        ].join("");
 
-        $("now").innerHTML = presence.length ? `<table><tr><th>Viewer</th><th>Watching</th><th>Online since</th></tr>${presence.map(([, p]) => `<tr><td><span class="dot"></span>${esc(p.name)}</td><td>${p.ch ? esc(p.ch) + ' <span class="muted">(' + esc(p.g) + ")</span>" : '<span class="muted">browsing</span>'}</td><td>${ago(p.since)}</td></tr>`).join("")}</table>` : '<div class="empty">Nobody online.</div>';
+        // trends
+        const hourly = rangeDays() === 1, n = hourly ? 24 : rangeDays();
+        const size = hourly ? 3600000 : DAY;
+        const end = hourly ? Math.ceil(Date.now() / size) * size : (() => { const d = new Date(); d.setHours(24, 0, 0, 0); return d.getTime(); })();
+        const start = end - n * size;
+        const val = new Array(n).fill(0), sets = Array.from({ length: n }, () => new Set()), seenBefore = new Set(prev.map((e) => e.v)), firstSeen = {};
+        cur.forEach((e) => {
+          const i = Math.floor((e.t - start) / size); if (i < 0 || i >= n) return;
+          if (metric === "plays" && e.type === "play") val[i]++;
+          else if (metric === "hours" && e.type === "watch") val[i] += (e.secs || 0) / 3600;
+          else if (metric === "active") sets[i].add(e.v);
+          else if (metric === "fresh" && !seenBefore.has(e.v) && (firstSeen[e.v] === undefined || firstSeen[e.v] > i)) firstSeen[e.v] = i;
+        });
+        if (metric === "active") sets.forEach((s, i) => (val[i] = s.size));
+        if (metric === "fresh") Object.values(firstSeen).forEach((i) => val[i]++);
+        const vm = Math.max(1e-9, ...val);
+        const label = (i) => { const d = new Date(start + i * size); return hourly ? d.getHours() + "h" : d.getMonth() + 1 + "/" + d.getDate(); };
+        $("trend").innerHTML = val.map((v, i) => `<div title="${label(i)} — ${metric === "hours" ? v.toFixed(1) + " h" : v}" style="height:${Math.max(2, (v / vm) * 100)}%"></div>`).join("");
+        const every = Math.ceil(n / 12); $("trendLab").innerHTML = val.map((_, i) => `<span>${i % every === 0 ? label(i) : ""}</span>`).join("");
 
-        const hrs = new Array(24).fill(0); plays.forEach((e) => hrs[new Date(e.t).getHours()]++);
-        const hm = Math.max(1, ...hrs);
-        $("hours").innerHTML = hrs.map((n, h) => `<div title="${h}:00 — ${n} plays" style="height:${Math.max(2, (n / hm) * 100)}%"></div>`).join("");
-        $("hlab").innerHTML = hrs.map((_, h) => `<span>${h % 3 === 0 ? h : ""}</span>`).join("");
+        // now
+        $("now").innerHTML = presence.length ? `<table><tr><th>Viewer</th><th>Watching</th><th>Online</th></tr>${presence.map(([, p]) => `<tr><td><span class="dot"></span>${esc(p.name)}</td><td>${p.ch ? esc(p.ch) + ' <span class="muted">(' + esc(p.g) + ")</span>" : '<span class="muted">browsing</span>'}</td><td>${ago(p.since)}</td></tr>`).join("")}</table>` : '<div class="empty">Nobody online.</div>';
 
-        const chPlays = {}, chSecs = {}, grp = {};
-        plays.forEach((e) => { chPlays[e.ch] = (chPlays[e.ch] || 0) + 1; grp[e.g] = (grp[e.g] || 0) + 1; });
+        // audience (all viewers, by activity in range when possible)
+        const vlist = Object.entries(data.viewers), activeIds = sc.active;
+        const cC = {}, cL = {}, cD = {};
+        vlist.forEach(([id, v]) => { if (!activeIds.has(id)) return; cC[countryOf(v.tz)] = (cC[countryOf(v.tz)] || 0) + 1; cL[langOf(v.lang)] = (cL[langOf(v.lang)] || 0) + 1; const d = v.device || "Unknown"; cD[d] = (cD[d] || 0) + 1; });
+        bars($("aCountry"), top(cC, 8)); bars($("aLang"), top(cL, 6)); bars($("aDev"), top(cD, 6));
+
+        // top lists
+        const plays = cur.filter((e) => e.type === "play"), watch = cur.filter((e) => e.type === "watch");
+        const chPlays = {}, chSecs = {}, grp = {}, hrs = new Array(24).fill(0);
+        plays.forEach((e) => { chPlays[e.ch] = (chPlays[e.ch] || 0) + 1; grp[e.g] = (grp[e.g] || 0) + 1; hrs[new Date(e.t).getHours()]++; });
         watch.forEach((e) => { chSecs[e.ch] = (chSecs[e.ch] || 0) + (e.secs || 0); });
         bars($("topCh"), top(chPlays, 10)); bars($("topChTime"), top(chSecs, 10), fmtDur); bars($("topG"), top(grp, 10));
+        const hm = Math.max(1, ...hrs);
+        $("hours").innerHTML = hrs.map((c, h) => `<div title="${h}:00 — ${c} plays" style="height:${Math.max(2, (c / hm) * 100)}%"></div>`).join("");
+        $("hlab").innerHTML = hrs.map((_, h) => `<span>${h % 3 === 0 ? h : ""}</span>`).join("");
 
-        const sq = {}; ev.filter((e) => e.type === "search").forEach((e) => { const o = sq[e.q] || (sq[e.q] = { n: 0, zero: 0 }); o.n++; if (!e.res) o.zero++; });
-        const sr = Object.entries(sq).sort((a, b) => b[1].n - a[1].n).slice(0, 15);
-        $("searches").innerHTML = sr.length ? `<table><tr><th>Search</th><th>Times</th></tr>${sr.map(([q, o]) => `<tr><td class="${o.zero ? "zero" : ""}">${esc(q)}${o.zero ? " ⚠" : ""}</td><td>${o.n}</td></tr>`).join("")}</table>` : '<div class="empty">No searches yet.</div>';
-
+        // searches + demand
+        const sq = {};
+        cur.filter((e) => e.type === "search").forEach((e) => { const o = sq[e.q] || (sq[e.q] = { n: 0, zero: 0, who: new Set() }); o.n++; if (!e.res) o.zero++; o.who.add(e.v); });
+        const sr = Object.entries(sq).sort((a, b) => b[1].n - a[1].n);
+        $("searches").innerHTML = sr.length ? `<table><tr><th>Search</th><th>Times</th><th>Viewers</th></tr>${sr.slice(0, 15).map(([q, o]) => `<tr><td class="${o.zero ? "zero" : ""}">${esc(q)}${o.zero ? " ⚠" : ""}</td><td>${o.n}</td><td>${o.who.size}</td></tr>`).join("")}</table>` : '<div class="empty">No searches yet.</div>';
+        const dm = sr.filter(([, o]) => o.zero).sort((a, b) => b[1].who.size - a[1].who.size || b[1].zero - a[1].zero);
         const rq = Object.entries(data.requests).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
-        $("requests").innerHTML = rq.length ? rq.map(([id, r]) => `<div style="border-bottom:1px solid var(--border);padding:.5rem 0"><div><span class="tag ${esc(r.status)}">${esc(r.status)}</span> <b>${esc(r.n)}</b> <span class="muted">${ago(r.t)}</span></div><div style="margin:.3rem 0">${esc(r.text)}</div><div>${r.status !== "done" ? `<button class="btn sec" data-act="done" data-id="${esc(id)}">Mark done</button> ` : ""}<button class="btn red" data-act="del" data-id="${esc(id)}">Delete</button></div></div>`).join("") : '<div class="empty">No requests yet.</div>';
+        const reqOpen = rq.filter(([, r]) => r.status !== "done");
+        const dmHtml = dm.length ? `<table><tr><th>No-result search</th><th>Searches</th><th>Viewers</th><th>Suggestion</th></tr>${dm.slice(0, 12).map(([q, o]) => `<tr><td class="zero">${esc(q)}</td><td>${o.zero}</td><td>${o.who.size}</td><td>${hintsFor(q).map((h) => `<span class="chip">${esc(h)}</span>`).join("") || '<span class="muted">—</span>'}</td></tr>`).join("")}</table>` : '<div class="empty">No unanswered searches in this range.</div>';
+        const reqHtml = reqOpen.length ? `<div style="margin-top:.7rem" class="muted">Open requests</div>${reqOpen.slice(0, 6).map(([, r]) => `<div style="padding:.3rem 0;border-bottom:1px solid var(--border);font-size:.85rem"><b>${esc(r.n)}</b>: ${esc(r.text)} ${hintsFor(String(r.text).toLowerCase()).map((h) => `<span class="chip">${esc(h)}</span>`).join("")}</div>`).join("")}` : "";
+        $("demand").innerHTML = dmHtml + reqHtml;
 
+        $("requests").innerHTML = rq.length ? rq.map(([id, r]) => `<div style="border-bottom:1px solid var(--border);padding:.5rem 0"><div><span class="tag ${esc(r.status)}">${esc(r.status)}</span> <b>${esc(r.n)}</b> <span class="muted">${ago(r.t)}</span></div><div style="margin:.3rem 0">${esc(r.text)}</div><div>${r.status !== "done" ? `<button class="btn sec sm" data-act="done" data-id="${esc(id)}">Mark done</button> ` : ""}<button class="btn red sm" data-act="del" data-id="${esc(id)}">Delete</button></div></div>`).join("") : '<div class="empty">No requests yet.</div>';
+
+        // per-viewer stats
         const per = {};
-        ev.forEach((e) => { const o = per[e.v] || (per[e.v] = { plays: 0, secs: 0, ch: {} }); if (e.type === "play") { o.plays++; o.ch[e.ch] = (o.ch[e.ch] || 0) + 1; } if (e.type === "watch") o.secs += e.secs || 0; });
-        const vr = Object.entries(data.viewers).sort((a, b) => (b[1].lastSeen || 0) - (a[1].lastSeen || 0));
-        $("viewers").innerHTML = vr.length ? `<table><tr><th>Name</th><th>Device</th><th>Last seen</th><th>Visits</th><th>Total watch</th><th>Plays (range)</th><th>Watch (range)</th><th>Favorite channel</th></tr>${vr.map(([id, v]) => { const p = per[id] || { plays: 0, secs: 0, ch: {} }; const fav = top(p.ch, 1)[0]; return `<tr><td>${esc(v.name)}</td><td>${esc(v.device)}</td><td>${ago(v.lastSeen)}</td><td>${v.visits || 0}</td><td>${fmtDur(v.watchSecs)}</td><td>${p.plays}</td><td>${fmtDur(p.secs)}</td><td>${fav ? esc(fav[0]) : "—"}</td></tr>`; }).join("")}</table>` : '<div class="empty">No viewers yet.</div>';
+        cur.forEach((e) => { const o = per[e.v] || (per[e.v] = { plays: 0, secs: 0, ch: {} }); if (e.type === "play") { o.plays++; o.ch[e.ch] = (o.ch[e.ch] || 0) + 1; } if (e.type === "watch") o.secs += e.secs || 0; });
+        const devCount = (id) => Object.keys((data.devices || {})[id] || {}).length;
+
+        // alerts
+        const al = [];
+        vlist.forEach(([id, v]) => {
+          const dc = devCount(id);
+          if (dc >= 3) al.push(`<div>🔀 <b>${esc(v.name)}</b> used <b>${dc} different devices</b> — the code may be shared.</div>`);
+          if (v.lastSeen && Date.now() - v.lastSeen > 7 * DAY) al.push(`<div>💤 <b>${esc(v.name)}</b> hasn't visited for ${Math.round((Date.now() - v.lastSeen) / DAY)} days.</div>`);
+        });
+        const req = Object.values(data.requests).filter((r) => r.status === "new" && Date.now() - (r.t || 0) > 3 * DAY).length;
+        if (req) al.push(`<div>📬 ${req} request(s) have been waiting more than 3 days.</div>`);
+        if (sc.zero >= 5) al.push(`<div>🎯 ${sc.zero} searches found nothing in this range — see "Channels to add".</div>`);
+        $("alerts").innerHTML = al.length ? al.join("") : '<div class="empty">Nothing needs attention.</div>';
+
+        // viewers table
+        const vr = vlist.sort((a, b) => (b[1].lastSeen || 0) - (a[1].lastSeen || 0));
+        $("viewers").innerHTML = vr.length ? `<table><tr><th>Name</th><th>Status</th><th>Country</th><th>Language</th><th>Devices</th><th>Last seen</th><th>Visits</th><th>Total watch</th><th>Plays</th><th>Watch (range)</th><th>Favorite channel</th></tr>${vr.map(([id, v]) => { const p = per[id] || { plays: 0, secs: 0, ch: {} }; const fav = top(p.ch, 1)[0]; const st = newSet.has(id) ? "fresh" : sc.active.has(id) ? "active" : "inactive"; return `<tr class="click" data-vid="${esc(id)}"><td>${esc(v.name)}</td><td><span class="tag ${st}">${st === "fresh" ? "new" : st}</span></td><td>${esc(countryOf(v.tz))}</td><td>${esc(langOf(v.lang))}</td><td>${devCount(id) || "—"}</td><td>${ago(v.lastSeen)}</td><td>${v.visits || 0}</td><td>${fmtDur(v.watchSecs)}</td><td>${p.plays}</td><td>${fmtDur(p.secs)}</td><td>${fav ? esc(fav[0]) : "—"}</td></tr>`; }).join("")}</table>` : '<div class="empty">No viewers yet.</div>';
       }
+
+      // ---- viewer detail ----
+      function openViewer(id) {
+        const v = data.viewers[id] || {}, evs = data.events.filter((e) => e.v === id).sort((a, b) => b.t - a.t);
+        const ch = {}, sq = {}; let secs = 0, plays = 0;
+        evs.forEach((e) => { if (e.type === "play") { plays++; ch[e.ch] = (ch[e.ch] || 0) + 1; } if (e.type === "watch") secs += e.secs || 0; if (e.type === "search") sq[e.q] = (sq[e.q] || 0) + 1; });
+        const line = (e) => { const t = new Date(e.t).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); const txt = e.type === "play" ? "▶ " + esc(e.ch) : e.type === "watch" ? "⏱ " + esc(e.ch) + " · " + fmtDur(e.secs) : e.type === "search" ? "🔍 " + esc(e.q) + (e.res ? ` (${e.res} results)` : ' <span class="zero">(no results)</span>') : e.type === "fav" ? "★ " + esc(e.ch) : "👋 opened NioroTV"; return `<div><span class="muted">${t}</span> &nbsp; ${txt}</div>`; };
+        $("modalBox").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><h1>${esc(v.name || id)}</h1><button class="btn sec" id="mClose">Close</button></div>
+          <div class="muted" style="margin:.3rem 0 .8rem">${esc(countryOf(v.tz))} · ${esc(langOf(v.lang))} · ${esc(v.device || "unknown device")} · ${Object.keys((data.devices || {})[id] || {}).length || "?"} device(s) · last seen ${ago(v.lastSeen)} · ${v.visits || 0} visits · ${fmtDur(v.watchSecs)} total watch</div>
+          <div class="grid"><div><h2>Favorite channels (range)</h2><div id="mCh"></div></div><div><h2>Searches (range)</h2><div id="mQ"></div></div></div>
+          <h2>Activity (latest 80 in loaded range) — ${plays} plays, ${fmtDur(secs)} watched</h2><div class="tl">${evs.slice(0, 80).map(line).join("") || '<div class="empty">No activity in this range.</div>'}</div>`;
+        bars($("mCh"), top(ch, 6)); bars($("mQ"), top(sq, 6));
+        $("modal").style.display = "block"; $("mClose").onclick = () => ($("modal").style.display = "none");
+      }
+      $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) $("modal").style.display = "none"; });
+      $("viewers").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-vid]"); if (tr) openViewer(tr.dataset.vid); });
 
       $("requests").addEventListener("click", (e) => {
         const b = e.target.closest("button[data-id]"); if (!b) return;
         const ref = db.ref("requests/" + b.dataset.id);
         if (b.dataset.act === "done") ref.update({ status: "done" }); else ref.remove();
       });
+
+      // ---- CSV export ----
+      const csv = (rows) => rows.map((r) => r.map((c) => { c = String(c == null ? "" : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(",")).join("\n");
+      function download(name, text) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/csv" })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+      $("expV").onclick = () => download("nioro-viewers.csv", csv([["id", "name", "country_est", "timezone", "language", "device", "devices_count", "last_seen", "visits", "watch_seconds"]].concat(Object.entries(data.viewers).map(([id, v]) => [id, v.name, countryOf(v.tz), v.tz, v.lang, v.device, Object.keys((data.devices || {})[id] || {}).length, v.lastSeen ? new Date(v.lastSeen).toISOString() : "", v.visits || 0, v.watchSecs || 0]))));
+      $("expE").onclick = () => download("nioro-activity.csv", csv([["time", "viewer_id", "name", "type", "channel", "group", "query", "results", "seconds"]].concat(data.events.filter((e) => e.t >= sinceNow()).map((e) => [new Date(e.t).toISOString(), e.v, e.n, e.type, e.ch, e.g, e.q, e.res, e.secs]))));
     }
   </script>
 </body>

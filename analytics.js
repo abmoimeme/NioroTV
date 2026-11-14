@@ -24,6 +24,13 @@
       presRef.onDisconnect().remove();
       presRef.set({ name, since: TS, ch: "", g: "" });
     } catch (e) {}
+    // Extra profile fields are written separately so a rules mismatch can never block the core tracking.
+    try {
+      let did = ""; try { did = localStorage.getItem("nioro_did") || ""; if (!did) { did = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); localStorage.setItem("nioro_did", did); } } catch (e) { did = "nols"; }
+      const tz = clip((Intl.DateTimeFormat().resolvedOptions().timeZone) || "", 60), lang = clip(navigator.language || "", 10);
+      db.ref("viewers/" + vid).update({ tz, lang }).catch(() => {});
+      db.ref("devices/" + vid + "/" + clip(did, 20)).set(TS).catch(() => {});
+    } catch (e) {}
     ev("visit", {});
     setInterval(heartbeat, 60000);
     document.addEventListener("visibilitychange", () => { if (document.hidden) heartbeat(); });
