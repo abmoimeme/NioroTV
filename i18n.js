@@ -53,6 +53,7 @@
   add("Select all", "Tout sélectionner", "Seleziona tutto");
   add("Clear all", "Tout effacer", "Deseleziona tutto");
   add("Sports", "Sports", "Sport");
+  add("Soccer", "Football", "Calcio");
   add("Movies", "Films", "Film");
   add("Documentary", "Documentaires", "Documentari");
   add("Religious", "Religion", "Religione");

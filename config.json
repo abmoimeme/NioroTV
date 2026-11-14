@@ -188,6 +188,7 @@
   "playlist_order": [
     "Featured",
     "Senegal",
+    "Soccer",
     "Islamic",
     "Sports",
     "News",
@@ -271,6 +272,12 @@
         "In English",
         "United States"
       ]
+    },
+    {
+      "file": "soccer.m3u",
+      "groups": [
+        "Soccer"
+      ]
     }
   ],
   "hide_geo_blocked": true,
@@ -313,5 +320,17 @@
         "Qatar": "Islamic"
       }
     }
+  ],
+  "soccer_keywords": [
+    "FIFA+",
+    "Golazo",
+    "beIN SPORTS XTRA",
+    "Sportitalia Solocalcio",
+    "Top Calcio",
+    "Radio TV Serie A",
+    "Barca",
+    "Real Madrid",
+    "Africa 24 Sport",
+    "Women's Football"
   ]
 }

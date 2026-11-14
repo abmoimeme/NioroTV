@@ -301,6 +301,17 @@ def main():
     featured = pick_featured(candidates, config.get("featured", []))
     candidates = featured + candidates
 
+    # "Soccer": official free soccer channels (FIFA+, Golazo, beIN Xtra, club TV...) collected from all groups
+    soccer, soccer_seen = [], set()
+    soccer_kw = [norm_name(k) for k in config.get("soccer_keywords", [])]
+    for extinf, extra_tags, stream_url in candidates:
+        n = norm_name(plain_name(extinf))
+        if stream_url in soccer_seen or group_of(extinf) == "Featured" or not any(k in n for k in soccer_kw):
+            continue
+        soccer_seen.add(stream_url)
+        soccer.append((re.sub(r'group-title="[^"]*"', 'group-title="Soccer"', extinf), extra_tags, stream_url))
+    candidates = candidates + dedupe_by_name(soccer)
+
     # Group order in Smarters = order of first appearance, so sort by the configured order
     order = config.get("playlist_order", [])
     if order:
