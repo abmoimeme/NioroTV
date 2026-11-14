@@ -1,9 +1,6 @@
 // NioroTV access-code gate. Codes are checked against salted hashes in codes.json.
 (function () {
-  const fr = (navigator.language || "en").toLowerCase().startsWith("fr");
-  const T = fr
-    ? { t: "Accès NioroTV", s: "Entrez votre nom et votre code d'accès personnel.", nm: "Votre nom", needName: "Entrez votre nom.", go: "Entrer", note: "Votre activité de visionnage est enregistrée pour améliorer NioroTV.", bad: "Code invalide.", err: "Impossible de vérifier le code. Réessayez." }
-    : { t: "NioroTV Access", s: "Enter your name and your personal access code.", nm: "Your name", needName: "Please enter your name.", go: "Enter", note: "Your viewing activity is recorded to help improve NioroTV.", bad: "Invalid code.", err: "Could not verify the code. Try again." };
+  const T = { t: "NioroTV Access", s: "Enter your name and your personal access code.", nm: "Your name", needName: "Please enter your name.", go: "Enter", note: "Your viewing activity is recorded to help improve NioroTV.", bad: "Invalid code.", err: "Could not verify the code. Try again." };
 
   const css = document.createElement("style");
   css.textContent = `#nioroGate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at top right,#260d54 0%,#0c041a 60%);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#f8fafc;padding:1rem}

@@ -553,6 +553,7 @@
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="auth.js"></script>
   <script>
     const BASE_IPTV = "https://iptv-org.github.io/iptv";
@@ -798,7 +799,7 @@
     function copyCurrentStreamUrl() {
       if (!currentChannel) return;
       navigator.clipboard.writeText(currentChannel.url);
-      alert("Stream URL copied!");
+      alert(NioroLang.t("Stream URL copied!"));
     }
 
     function downloadM3U() {
