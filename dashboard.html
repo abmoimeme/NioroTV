@@ -107,6 +107,7 @@
   <script>
     const cfg = window.FIREBASE_CONFIG || {};
     const $ = (id) => document.getElementById(id);
+    const soft = (w) => /^(browser|blocked):/.test(w || "");
     const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     const fmtDur = (s) => { s = Math.round(s || 0); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return h ? `${h}h ${m}m` : `${m}m`; };
     const ago = (t) => { if (!t) return "—"; const m = Math.round((Date.now() - t) / 60000); if (m < 1) return "just now"; if (m < 60) return m + " min ago"; const h = Math.round(m / 60); return h < 48 ? h + " h ago" : Math.round(h / 24) + " d ago"; };
@@ -219,7 +220,7 @@
           if (metric === "plays" && e.type === "play") val[i]++;
           else if (metric === "hours" && e.type === "watch") val[i] += (e.secs || 0) / 3600;
           else if (metric === "active") sets[i].add(e.v);
-          else if (metric === "issues" && ((e.type === "fail" && e.why !== "abandoned") || e.type === "stall")) val[i]++;
+          else if (metric === "issues" && ((e.type === "fail" && e.why !== "abandoned" && !soft(e.why)) || e.type === "stall")) val[i]++;
           else if (metric === "fresh" && !seenBefore.has(e.v) && (firstSeen[e.v] === undefined || firstSeen[e.v] > i)) firstSeen[e.v] = i;
         });
         if (metric === "active") sets.forEach((s, i) => (val[i] = s.size));
@@ -252,9 +253,9 @@
         const CH = {}, mk = (c, g) => CH[c] || (CH[c] = { g, plays: 0, fails: 0, gaveUp: 0, stalls: 0, stallSecs: 0, startSum: 0, startN: 0, who: new Set(), last: 0, why: {} });
         plays.forEach((e) => { mk(e.ch, e.g).plays++; });
         const fx = (e, c) => { c.who.add(e.v); if (e.t > c.last) c.last = e.t; };
-        let failsReal = 0, stallN = 0, stallS = 0, startSum = 0, startN = 0;
+        let failsReal = 0, limitedN = 0, stallN = 0, stallS = 0, startSum = 0, startN = 0;
         cur.forEach((e) => {
-          if (e.type === "fail") { const c = mk(e.ch, e.g); if (e.why === "abandoned") { c.gaveUp++; } else { c.fails++; failsReal++; c.why[e.why || "unknown"] = (c.why[e.why || "unknown"] || 0) + 1; fx(e, c); } }
+          if (e.type === "fail") { const c = mk(e.ch, e.g); if (e.why === "abandoned") { c.gaveUp++; } else if (soft(e.why)) { limitedN++; } else { c.fails++; failsReal++; c.why[e.why || "unknown"] = (c.why[e.why || "unknown"] || 0) + 1; fx(e, c); } }
           else if (e.type === "stall") { const c = mk(e.ch, e.g); c.stalls++; c.stallSecs += e.secs || 0; stallN++; stallS += e.secs || 0; fx(e, c); }
           else if (e.type === "start") { const c = mk(e.ch, e.g); c.startSum += e.secs || 0; c.startN++; startSum += e.secs || 0; startN++; }
         });
@@ -273,8 +274,9 @@
         $("hTable").innerHTML = prob.length ? `<table><tr><th>Channel</th><th>Plays</th><th>Failed</th><th>Gave up</th><th>Stalls</th><th>Buffering</th><th>Avg start</th><th>Viewers hit</th><th>Main reason</th><th>Last issue</th></tr>${prob.map(({ c, o }) => { const why = top(o.why, 1)[0]; return `<tr><td title="${esc(o.g)}">${esc(c)}</td><td>${o.plays}</td><td class="${o.fails ? "zero" : ""}">${o.fails}${o.plays ? " (" + Math.round((o.fails / o.plays) * 100) + "%)" : ""}</td><td>${o.gaveUp}</td><td>${o.stalls}</td><td>${fmtDur(o.stallSecs)}</td><td>${o.startN ? (o.startSum / o.startN).toFixed(1) + "s" : "—"}</td><td>${o.who.size}</td><td>${why ? esc(why[0]) : "—"}</td><td>${ago(o.last)}</td></tr>`; }).join("")}</table>` : '<div class="empty">No stream problems recorded in this range. 🎉</div>';
         const dead = Object.entries(CH).filter(([, o]) => (o.plays >= 2 && o.fails / Math.max(1, o.plays) >= 0.5) || o.fails >= 3).sort((a, b) => b[1].fails - a[1].fails).slice(0, 10);
         $("hDead").innerHTML = dead.length ? `<table><tr><th>Channel</th><th>Failed / plays</th><th>Viewers</th><th>Suggestion</th></tr>${dead.map(([c, o]) => `<tr><td>${esc(c)}</td><td class="zero">${o.fails} / ${o.plays}</td><td>${o.who.size}</td><td><span class="chip">${o.fails >= o.plays ? "remove or replace" : "needs a backup source"}</span></td></tr>`).join("")}</table>` : '<div class="empty">No channels look dead right now.</div>';
+        if (limitedN) $("hDead").innerHTML += `<div class="empty" style="margin-top:.6rem">${limitedN} play${limitedN === 1 ? "" : "s"} could not start in the browser (insecure or blocked streams). These are not counted as failures; they should work in Smarters or VLC.</div>`;
         const grpQ = (keyFn) => { const m = {}; const row = (k) => m[k] || (m[k] = { plays: 0, fails: 0, stalls: 0, sSecs: 0, startSum: 0, startN: 0 });
-          cur.forEach((e) => { const v = data.viewers[e.v] || {}, k = keyFn(v); if (e.type === "play") row(k).plays++; else if (e.type === "fail" && e.why !== "abandoned") row(k).fails++; else if (e.type === "stall") { row(k).stalls++; row(k).sSecs += e.secs || 0; } else if (e.type === "start") { row(k).startSum += e.secs || 0; row(k).startN++; } });
+          cur.forEach((e) => { const v = data.viewers[e.v] || {}, k = keyFn(v); if (e.type === "play") row(k).plays++; else if (e.type === "fail" && e.why !== "abandoned" && !soft(e.why)) row(k).fails++; else if (e.type === "stall") { row(k).stalls++; row(k).sSecs += e.secs || 0; } else if (e.type === "start") { row(k).startSum += e.secs || 0; row(k).startN++; } });
           const rows = Object.entries(m).filter(([, o]) => o.plays).sort((a, b) => b[1].plays - a[1].plays).slice(0, 8);
           return rows.length ? `<table><tr><th></th><th>Plays</th><th>Failed</th><th>Stalls</th><th>Avg start</th></tr>${rows.map(([k, o]) => `<tr><td>${esc(k)}</td><td>${o.plays}</td><td class="${o.fails ? "zero" : ""}">${Math.round((o.fails / o.plays) * 100)}%</td><td>${o.stalls} (${fmtDur(o.sSecs)})</td><td>${o.startN ? (o.startSum / o.startN).toFixed(1) + "s" : "—"}</td></tr>`).join("")}</table>` : '<div class="empty">No data yet.</div>'; };
         $("hCountry").innerHTML = "<div class='muted'>By country</div>" + grpQ((v) => countryOf(v.tz));

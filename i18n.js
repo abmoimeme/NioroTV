@@ -62,6 +62,17 @@
   add("Culture", "Culture", "Cultura");
   add("Education", "Éducation", "Istruzione");
   add("Family", "Famille", "Famiglia");
+  // Stream problems
+  add("This channel can't play in the browser", "Cette chaîne ne peut pas être lue dans le navigateur", "Questo canale non può essere riprodotto nel browser");
+  add("Its server only offers an insecure connection. Open it in Smarters Player Lite or VLC.", "Son serveur n'offre qu'une connexion non sécurisée. Ouvrez-la dans Smarters Player Lite ou VLC.", "Il suo server offre solo una connessione non sicura. Aprilo in Smarters Player Lite o VLC.");
+  add("Not available in your region", "Non disponible dans votre région", "Non disponibile nella tua regione");
+  add("The broadcaster restricts this channel by country.", "Le diffuseur restreint cette chaîne par pays.", "L'emittente limita questo canale per paese.");
+  add("This channel is offline right now", "Cette chaîne est hors ligne pour le moment", "Questo canale è offline al momento");
+  add("Try again later.", "Réessayez plus tard.", "Riprova più tardi.");
+  add("Blocked by the browser or unreachable", "Bloquée par le navigateur ou inaccessible", "Bloccato dal browser o irraggiungibile");
+  add("It may work in Smarters Player Lite or VLC.", "Elle peut fonctionner dans Smarters Player Lite ou VLC.", "Potrebbe funzionare in Smarters Player Lite o VLC.");
+  add("Stream unavailable", "Flux indisponible", "Flusso non disponibile");
+  add("Try copying the URL into Smarters Player Lite or VLC.", "Essayez de copier l'URL dans Smarters Player Lite ou VLC.", "Prova a copiare l'URL in Smarters Player Lite o VLC.");
   // Player
   add("Select any channel below to start watching", "Choisissez une chaîne ci-dessous pour regarder", "Scegli un canale qui sotto per guardare");
   add("Supports live HLS (.m3u8) streams directly in your browser", "Lecture directe des flux HLS (.m3u8) dans votre navigateur", "Riproduce flussi HLS (.m3u8) direttamente nel browser");
