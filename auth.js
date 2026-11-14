@@ -27,12 +27,24 @@
     const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
     return Array.from(new Uint8Array(b)).map((x) => x.toString(16).padStart(2, "0")).join("");
   }
+  // v2 codes use PBKDF2 (200k rounds) so a leaked codes.json can't be brute-forced quickly.
+  async function pbkdf2(code, salt) {
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(code), "PBKDF2", false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: new TextEncoder().encode(salt), iterations: 200000 }, key, 256);
+    return Array.from(new Uint8Array(bits)).map((x) => x.toString(16).padStart(2, "0")).join("");
+  }
   async function lookup(code) {
     const r = await fetch("codes.json", { cache: "no-store" });
     if (!r.ok) throw new Error("codes.json " + r.status);
     const d = await r.json();
-    const h = await sha256(d.salt + norm(code));
-    return d.codes.find((c) => c.h === h) || null;
+    const c = norm(code);
+    const h1 = await sha256(d.salt + c);
+    let hit = d.codes.find((e) => e.v !== 2 && e.h === h1);
+    if (!hit && d.codes.some((e) => e.v === 2)) {
+      const h2 = await pbkdf2(c, d.salt);
+      hit = d.codes.find((e) => e.v === 2 && e.h === h2);
+    }
+    return hit || null;
   }
 
   let opts = {};

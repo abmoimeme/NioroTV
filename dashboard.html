@@ -44,6 +44,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
   <script src="firebase-config.js"></script>
 </head>
 <body>
@@ -134,6 +135,7 @@
       $("loginMsg").textContent = "Firebase isn't configured yet (firebase-config.js)."; $("signin").disabled = true;
     } else {
       firebase.initializeApp(cfg);
+      try { if (cfg.appCheckSiteKey && firebase.appCheck) firebase.appCheck().activate(cfg.appCheckSiteKey, true); } catch (e) {}
       const auth = firebase.auth(), db = firebase.database();
       let listeners = [], evStop = null, data = blank(), metric = "plays";
       function blank() { return { viewers: {}, presence: {}, events: [], requests: {}, devices: {} }; }
@@ -338,7 +340,7 @@
       });
 
       // ---- CSV export ----
-      const csv = (rows) => rows.map((r) => r.map((c) => { c = String(c == null ? "" : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(",")).join("\n");
+      const csv = (rows) => rows.map((r) => r.map((c) => { c = String(c == null ? "" : c); if (/^[=+\-@\t\r]/.test(c) && !/^-?\d+(\.\d+)?$/.test(c)) c = "'" + c; return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(",")).join("\n");
       function download(name, text) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/csv" })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
       $("expV").onclick = () => download("nioro-viewers.csv", csv([["id", "name", "country_est", "timezone", "language", "device", "devices_count", "last_seen", "visits", "watch_seconds"]].concat(Object.entries(data.viewers).map(([id, v]) => [id, v.name, countryOf(v.tz), v.tz, v.lang, v.device, Object.keys((data.devices || {})[id] || {}).length, v.lastSeen ? new Date(v.lastSeen).toISOString() : "", v.visits || 0, v.watchSecs || 0]))));
       $("expE").onclick = () => download("nioro-activity.csv", csv([["time", "viewer_id", "name", "type", "channel", "group", "query", "results", "seconds", "reason"]].concat(data.events.filter((e) => e.t >= sinceNow()).map((e) => [new Date(e.t).toISOString(), e.v, e.n, e.type, e.ch, e.g, e.q, e.res, e.secs, e.why]))));

@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script src="analytics.js"></script>
   <style>
@@ -717,6 +718,8 @@
       require_https: false
     };
 
+    const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const safeUrl = (u) => /^https?:\/\//i.test(u || "") ? u : "";
     let allChannels = [], uniq = [], numByUrl = {};
     let favorites = JSON.parse(localStorage.getItem("roku_iptv_favs") || "[]");
     let currentChannel = null;
@@ -856,15 +859,16 @@
           tile.dataset.row = rowIdx;
           tile.dataset.col = colIdx;
           tile.innerHTML = `
-            <button class="fav-star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFavUrl('${ch.url.replace(/'/g, "\\'")}')">${isFav ? "★" : "☆"}</button>
+            <button class="fav-star ${isFav ? "active" : ""}">${isFav ? "★" : "☆"}</button>
             <div class="tile-logo">
-              ${ch.logo ? `<img src="${ch.logo}" onerror="this.style.display='none'" alt="" />` : `<span style="font-weight:800; color:#a855f7;">TV</span>`}
+              ${safeUrl(ch.logo) ? `<img src="${esc(ch.logo)}" onerror="this.style.display='none'" alt="" />` : `<span style="font-weight:800; color:#a855f7;">TV</span>`}
             </div>
             <div>
-              <div class="tile-name" title="${ch.name}">${ch.name}</div>
-              <div class="tile-group">${ch.group}</div>
+              <div class="tile-name" title="${esc(ch.name)}">${esc(ch.name)}</div>
+              <div class="tile-group">${esc(ch.group)}</div>
             </div>
           `;
+          tile.querySelector(".fav-star").onclick = (e) => { e.stopPropagation(); toggleFavUrl(ch.url); };
           tile.onclick = () => {
             if (currentChannel && currentChannel.url === ch.url) {
               enterTheaterFullscreen();
@@ -892,7 +896,7 @@
       updateHeroFavButton();
 
       status.classList.remove("hidden");
-      status.innerHTML = `<div style="font-weight:700;">Connecting to ${ch.name}...</div>`;
+      status.innerHTML = `<div style="font-weight:700;">Connecting to ${esc(ch.name)}...</div>`;
 
       if (hlsInstance) {
         hlsInstance.destroy();
@@ -1023,11 +1027,11 @@
         tile.style.maxWidth = "none";
         tile.innerHTML = `
           <div class="tile-logo">
-            ${ch.logo ? `<img src="${ch.logo}" onerror="this.style.display='none'" alt="" />` : `<span style="font-weight:800; color:#a855f7;">TV</span>`}
+            ${safeUrl(ch.logo) ? `<img src="${esc(ch.logo)}" onerror="this.style.display='none'" alt="" />` : `<span style="font-weight:800; color:#a855f7;">TV</span>`}
           </div>
           <div>
-            <div class="tile-name">${ch.name}</div>
-            <div class="tile-group">${ch.group}</div>
+            <div class="tile-name">${esc(ch.name)}</div>
+            <div class="tile-group">${esc(ch.group)}</div>
           </div>
         `;
         tile.onclick = () => {
@@ -1058,7 +1062,8 @@
         const checked = config[key].includes(item.id) ? "checked" : "";
         const label = document.createElement("label");
         label.className = "chip-label";
-        label.innerHTML = `<input type="checkbox" ${checked} onchange="toggleConfigItem('${key}', '${item.id}')" /> ${item.name}`;
+        label.innerHTML = `<input type="checkbox" ${checked} /> <span>${esc(item.name)}</span>`;
+        label.querySelector("input").onchange = () => toggleConfigItem(key, item.id);
         container.appendChild(label);
       });
     }
@@ -1072,7 +1077,7 @@
 
     function addCustomCode(key, inputId) {
       const val = document.getElementById(inputId).value.trim().toLowerCase();
-      if (!val) return;
+      if (!/^[a-z]{2,3}$/.test(val)) return;
       if (!config[key].includes(val)) config[key].push(val);
       document.getElementById(inputId).value = "";
       renderStore();
@@ -1279,7 +1284,7 @@ jobs:
       star.onclick = (e) => { e.stopPropagation(); toggleFavUrl(ch.url); };
       num.appendChild(star);
       const logo = document.createElement("div"); logo.className = "g-logo";
-      if (ch.logo) { const im = document.createElement("img"); im.alt = ""; im.src = ch.logo; im.onerror = () => { im.remove(); const t = document.createElement("span"); t.className = "tv"; t.textContent = "TV"; logo.prepend(t); }; logo.appendChild(im); }
+      if (ch.logo) { const im = document.createElement("img"); im.alt = ""; if (safeUrl(ch.logo)) im.src = ch.logo; im.onerror = () => { im.remove(); const t = document.createElement("span"); t.className = "tv"; t.textContent = "TV"; logo.prepend(t); }; logo.appendChild(im); }
       else { const t = document.createElement("span"); t.className = "tv"; t.textContent = "TV"; logo.appendChild(t); }
       const now = document.createElement("div"); now.className = "g-now"; now.innerHTML = "<i></i><i></i><i></i>"; logo.appendChild(now);
       const info = document.createElement("div"); info.className = "g-info";
@@ -1390,7 +1395,7 @@ jobs:
     NioroAuth.init({
       onReady(ctx) {
         viewerCtx = ctx;
-        { const pb = document.getElementById('profileBtn'); const ch = (ctx.name || '').trim().charAt(0).toUpperCase(); if (ch) pb.innerHTML = ch; }
+        { const pb = document.getElementById('profileBtn'); const ch = (ctx.name || '').trim().charAt(0).toUpperCase(); if (ch) pb.textContent = ch; }
         if (window.NioroTrack) {
           NioroTrack.init(ctx);
           const vEl = document.getElementById("hlsVideo");
