@@ -11767,16 +11767,8 @@ http://m.live.net.sa:1935/live/quran/gmswf.m3u8
 https://rotana.hibridcdn.net/rotananet/risala_net-7Y83PP5adWixDF93/playlist.m3u8
 #EXTINF:-1 tvg-id="AlSunnahAlNabawiyahTV.sa@SD" tvg-logo="https://aloula.faulio.com/storage/mediagallery/33/92/fullhd_879e557011826f507a045b4e0b4c3b57ba93edae.png" group-title="Category: Religious",Al Sunnah Al Nabawiyah TV (720p)
 http://m.live.net.sa:1935/live/sunnah/gmswf.m3u8
-#EXTINF:-1 tvg-id="Alquran.iq@SD" tvg-logo="https://i.imgur.com/lqVwrAF.png" group-title="Category: Religious",Alquran (1080p)
-https://ktvlive.online/stream/hls/ch1.m3u8
-#EXTINF:-1 tvg-id="AzanTV.ca@SD" tvg-logo="https://i.imgur.com/JlqS6I4.jpeg" group-title="Category: Religious",Azan TV
-https://dbcanada.sonarbanglatv.com/azantv/atv/index.m3u8
-#EXTINF:-1 tvg-id="BahrainQuran.bh@SD" tvg-logo="https://i.imgur.com/er5hOK4.png" group-title="Category: Religious",Bahrain Quran (720p) [Not 24/7]
-https://5c7b683162943.streamlock.net/live/ngrp:bahrainquran_all/playlist.m3u8
 #EXTINF:-1 tvg-id="HolyQuranRadio.sa@SD" tvg-logo="https://aloula.faulio.com/storage/mediagallery/14/da/fullhd_823bc2fe722ede75410492d57fd6c201208b4224.png" group-title="Category: Religious",Holy Quran Radio (1080p)
 https://live.kwikmotion.com/sbrksaquranradiolive/srpksaquranradio/playlist.m3u8
-#EXTINF:-1 tvg-id="HolyQuranRadioNablus.ps@SD" tvg-logo="https://quran-radio.com/assets/images/site/quran-radio-logo-h-rtl.png" group-title="Category: Religious",Holy Quran Radio Nablus (720p)
-http://streaming.zaytonatube.com:8080/holyquran/holyquran/video.m3u8
 #EXTINF:-1 tvg-id="HudaTV.eg@SD" tvg-logo="https://i.imgur.com/1UUjU26.png" group-title="Category: Religious",Huda TV (720p) [Not 24/7]
 https://cdn.bestream.io:19360/elfaro1/elfaro1.m3u8
 #EXTINF:-1 tvg-id="IqraBangla.uk@SD" tvg-logo="https://i.imgur.com/BZBZAeC.png" group-title="Category: Religious",Iqra Bangla (576p)
@@ -11787,32 +11779,10 @@ https://cdn149.anystream.uk:8082/app/iq53la/playlist.m3u8
 https://playlist.fasttvcdn.com/pl/dlkqw1ftuvuuzkcb4pxdcg/Iqraafasttv2/playlist.m3u8
 #EXTINF:-1 tvg-id="IslamChannel.uk@SD" tvg-logo="https://i.imgur.com/bJdFH7x.png" group-title="Category: Religious",Islam Channel (576p) [Not 24/7]
 https://live.islamchannel.tv/live11/islamtv_english/bitrate1.isml/live.m3u8
-#EXTINF:-1 tvg-id="KarbalaDocumentary.iq@HD" tvg-logo="https://www.karbala-tv.iq/documentary/static/img/logo.png" group-title="Category: Religious",Karbala Documentary
-https://ktvlive.online/stream/hls/ch3.m3u8
 #EXTINF:-1 tvg-id="MakkahTV.sa@SD" tvg-logo="https://i.ibb.co/r2k71w5N/download.png" group-title="Category: Religious",Makkah TV (576p)
 https://media2.streambrothers.com:1936/8122/8122/playlist.m3u8
 #EXTINF:-1 tvg-id="MuslimNetworkTV.us@SD" tvg-logo="" group-title="Category: Religious",Muslim Network TV
 https://afghantv.app/hls2/muslimnetwork/index.m3u8
-#EXTINF:-1 tvg-id="PeaceTVBangla.ae@SD" tvg-logo="https://i.imgur.com/1ztVXUi.png" group-title="Category: Religious",Peace TV Bangla (1080p)
-https://dzkyvlfyge.erbvr.com/PeaceTvBangla/index.m3u8
-#EXTINF:-1 tvg-id="PeaceTVChinese.ae@SD" tvg-logo="https://github.com/fawazahmed0/tiger/raw/master/peace/chinese.jpg" group-title="Category: Religious",Peace TV Chinese (1080p)
-https://dzkyvlfyge.erbvr.com/PeaceTvChinese/index.m3u8
-#EXTINF:-1 tvg-id="PeaceTVEnglish.ae@SD" tvg-logo="https://i.imgur.com/rjgCM2B.png" group-title="Category: Religious",Peace TV English (1080p)
-https://dzkyvlfyge.erbvr.com/PeaceTvEnglish/index.m3u8
-#EXTINF:-1 tvg-id="PeaceTVUrdu.ae@SD" tvg-logo="https://github.com/fawazahmed0/tiger/raw/master/peace/urdu.jpg" group-title="Category: Religious",Peace TV Urdu (1080p)
-https://dzkyvlfyge.erbvr.com/PeaceTvUrdu/index.m3u8
-#EXTINF:-1 tvg-id="QatarTVTheHolyQuran.qa@HD" tvg-logo="https://www.qmc.qa/img/LiveChannels/1ca67a44-9290-4b2a-8a16-d8c6e2260816.jpg" group-title="Category: Religious",Qatar TV The Holy Quran (1080p)
-https://qatartv.akamaized.net/hls/live/20000612/qtvquran/master.m3u8
-#EXTINF:-1 tvg-id="QuranTV.ir@SD" tvg-logo="https://upload.wikimedia.org/wikipedia/fa/d/df/Quarntvlogo.png" group-title="Category: Religious",Quran TV (Iran)
-https://ncdn.telewebion.ir/quran/live/playlist.m3u8
-#EXTINF:-1 tvg-id="QuranTV.pk@SD" tvg-logo="https://i.imgur.com/nc7X3Ux.png" group-title="Category: Religious",Quran TV (Pakistan) (576p)
-http://103.250.28.74:8000/play/a03e/index.m3u8
-#EXTINF:-1 tvg-id="SharjahRadioQuran.ae@SD" tvg-logo="https://i.imgur.com/MxZlOvc.png" group-title="Category: Religious",Sharjah Radio Quran (1080p)
-https://live.kwikmotion.com/smcquranlive/quranradiolive/playlist.m3u8
-#EXTINF:-1 tvg-id="TheIslamicNetwork.tt@SD" tvg-logo="https://i.imgur.com/EtQolw6.png" group-title="Category: Religious",The Islamic Network (720p)
-https://video1.getstreamhosting.com:1936/8322/8322/playlist.m3u8
-#EXTINF:-1 tvg-id="TVMuslimThailand.th@SD" tvg-logo="https://i.imgur.com/aCFpuzW.png" group-title="Category: Religious",TV Muslim Thailand
-https://vdo.plathong.net/tvmuslim/tvmuslim/playlist.m3u8
 #EXTINF:-1 tvg-id="3ABNKids.us@SD" tvg-logo="https://i.imgur.com/z3npqO1.png" group-title="Category: Kids",3ABN Kids (720p)
 https://3abn.bozztv.com/3abn2/Kids_live/smil:Kids_live.smil/playlist.m3u8
 #EXTINF:-1 tvg-id="90sKids.us@SD" tvg-logo="https://images.pluto.tv/channels/6452c814939a590008567a3b/colorLogoPNG_1731836283044.png" group-title="Category: Kids",90's Kids
