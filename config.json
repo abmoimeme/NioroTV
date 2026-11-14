@@ -1,0 +1,7 @@
+{
+  "countries": ["sn", "us", "fr"],
+  "languages": ["fra", "eng"],
+  "categories": ["sports", "movies", "news"],
+  "remove_duplicates": true,
+  "require_https": false
+}

@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NioroTV — Live TV &amp; Smarters M3U Studio</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+  <style>
+    :root {
+      --roku-bg: #0c041a;
+      --roku-surface: #180933;
+      --roku-card: #230f47;
+      --roku-purple: #662d91;
+      --roku-glow: #a855f7;
+      --roku-accent: #c084fc;
+      --text-main: #f8fafc;
+      --text-muted: #a799c2;
+      --border: #361c66;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top right, #260d54 0%, var(--roku-bg) 60%);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    /* Layout */
+    .app-shell { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px;
+      background: rgba(14, 5, 31, 0.92);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      z-index: 20;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      padding: 0 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+    }
+    .brand-badge {
+      background: linear-gradient(135deg, #9333ea, #662d91);
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+    }
+    .nav-btn {
+      background: transparent;
+      border: 2px solid transparent;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.15s ease;
+    }
+    .nav-btn:hover, .nav-btn.active {
+      background: var(--roku-card);
+      color: #fff;
+      border-color: var(--roku-glow);
+      box-shadow: 0 0 18px rgba(168, 85, 247, 0.35);
+    }
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .main-content {
+      flex: 1;
+      padding: 1.5rem 2rem 4rem;
+      max-width: calc(100vw - 240px);
+    }
+    /* Top Bar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .clock-pill {
+      background: var(--roku-surface);
+      border: 1px solid var(--border);
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--roku-accent);
+    }
+    .btn {
+      background: linear-gradient(135deg, #7e22ce, #581c87);
+      color: #fff;
+      border: 1px solid var(--roku-glow);
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+      font-size: 0.9rem;
+    }
+    .btn:hover { filter: brightness(1.15); box-shadow: 0 0 14px rgba(168, 85, 247, 0.5); }
+    .btn-secondary {
+      background: var(--roku-surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+    /* Hero Live Player */
+    .hero-player {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 1.5rem;
+      background: linear-gradient(145deg, #1d0b3d, #110626);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+    }
+    .video-wrap {
+      position: relative;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      border: 2px solid #2e155c;
+    }
+    video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+    .player-overlay-status {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(12, 4, 26, 0.8);
+      text-align: center;
+      padding: 1rem;
+      pointer-events: none;
+    }
+    .player-overlay-status.hidden { display: none; }
+    .hero-meta {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(220, 38, 38, 0.2);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      width: fit-content;
+    }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: pulse 1.4s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    /* Swimlanes */
+    .swimlane { margin-bottom: 2rem; }
+    .swimlane-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .swimlane-title { font-size: 1.15rem; font-weight: 700; color: #f3e8ff; }
+    .swimlane-row {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding: 0.5rem 0.25rem 1rem;
+      scroll-behavior: smooth;
+    }
+    .swimlane-row::-webkit-scrollbar { height: 6px; }
+    .swimlane-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+    .channel-tile {
+      min-width: 190px;
+      max-width: 190px;
+      background: var(--roku-card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+    .channel-tile:hover, .channel-tile.focused {
+      transform: scale(1.06);
+      border-color: var(--roku-glow);
+      box-shadow: 0 0 22px rgba(168, 85, 247, 0.6);
+      z-index: 5;
+    }
+    .tile-logo {
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(12, 4, 26, 0.55);
+      border-radius: 8px;
+      margin-bottom: 0.65rem;
+      padding: 0.35rem;
+      overflow: hidden;
+    }
+    .tile-logo img { max-height: 44px; max-width: 100%; object-fit: contain; }
+    .tile-name {
+      font-weight: 700;
+      font-size: 0.92rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tile-group { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .fav-star {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(12, 4, 26, 0.75);
+      border: none;
+      color: #cbd5e1;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .fav-star.active { color: #facc15; }
+    /* Views */
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    /* Roku Search */
+    .search-layout { display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; }
+    .keypad-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.4rem; margin-top: 0.75rem; }
+    .key-btn {
+      background: var(--roku-card);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 0.65rem 0;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .key-btn:hover { border-color: var(--roku-glow); background: var(--roku-purple); }
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+      gap: 1rem;
+    }
+    /* Cards & Forms */
+    .panel-card {
+      background: var(--roku-surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .chip-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.55rem;
+      margin-top: 0.75rem;
+    }
+    .chip-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--roku-bg);
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    input[type="text"] {
+      background: var(--roku-bg);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.92rem;
+    }
+    pre {
+      background: #070210;
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 10px;
+      overflow-x: auto;
+      color: #d8b4fe;
+      font-size: 0.82rem;
+      max-height: 260px;
+    }
+    /* Floating Roku Remote */
+    .remote-widget {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #14072b;
+      border: 2px solid var(--roku-glow);
+      border-radius: 24px;
+      padding: 1rem;
+      width: 170px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75);
+      z-index: 50;
+      text-align: center;
+    }
+    .remote-widget.collapsed { width: auto; padding: 0.6rem 1rem; border-radius: 999px; }
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.35rem;
+      margin: 0.75rem 0;
+    }
+    .dpad button {
+      background: var(--roku-purple);
+      border: none;
+      color: #fff;
+      padding: 0.65rem 0;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .dpad button:hover { background: var(--roku-glow); }
+    @media (max-width: 900px) {
+      .app-shell { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; }
+      .main-content { max-width: 100%; }
+      .hero-player, .search-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-badge">NIORO</span>
+        <span>TV</span>
+      </div>
+      <button class="nav-btn active" data-view="home" onclick="switchView('home', this)">🏠 Home & Live TV</button>
+      <button class="nav-btn" data-view="search" onclick="switchView('search', this)">🔍 Search</button>
+      <button class="nav-btn" data-view="store" onclick="switchView('store', this)">🛍️ Channel Store</button>
+      <button class="nav-btn" data-view="sync" onclick="switchView('sync', this)">☁️ Smarters GitHub Sync</button>
+
+      <div class="sidebar-footer">
+        <div id="channelStats">Loading channels...</div>
+        <div style="margin-top:0.5rem;">Use Arrow Keys + Enter or the Remote Pad.</div>
+      </div>
+    </aside>
+
+    <!-- Main Area -->
+    <main class="main-content">
+      <div class="topbar">
+        <div>
+          <h2 id="viewTitle" style="font-size:1.45rem;">Home — Live Channels</h2>
+          <span style="font-size:0.85rem; color:var(--text-muted);">Free-to-air global streams powered by IPTV-org</span>
+        </div>
+        <div style="display:flex; gap:0.65rem; align-items:center;">
+          <button class="btn btn-secondary" onclick="downloadM3U()">⬇ Download playlist.m3u</button>
+          <div class="clock-pill" id="clockDisplay">--:--</div>
+        </div>
+      </div>
+
+      <!-- VIEW 1: HOME & LIVE TV -->
+      <section id="view-home" class="view-section active">
+        <div class="hero-player">
+          <div class="video-wrap" id="videoContainer">
+            <video id="hlsVideo" controls playsinline></video>
+            <div class="player-overlay-status" id="playerStatus">
+              <div style="font-size:1.1rem; font-weight:700; margin-bottom:0.35rem;">Select any channel below to start watching</div>
+              <div style="font-size:0.85rem; color:var(--text-muted);">Supports live HLS (.m3u8) streams directly in your browser</div>
+            </div>
+          </div>
+          <div class="hero-meta">
+            <div class="live-badge"><span class="live-dot"></span> LIVE STREAM PREVIEW</div>
+            <h3 id="nowPlayingTitle" style="font-size:1.5rem;">Ready to Stream</h3>
+            <p id="nowPlayingGroup" style="color:var(--text-muted); font-size:0.95rem;">Choose a channel tile from Senegal, France, USA, Sports, or Movies.</p>
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:0.5rem;">
+              <button class="btn" onclick="enterTheaterFullscreen()">⛶ Watch Fullscreen</button>
+              <button class="btn btn-secondary" id="heroFavBtn" onclick="toggleCurrentFavorite()">☆ Add to Favorites</button>
+              <button class="btn btn-secondary" onclick="copyCurrentStreamUrl()">📋 Copy Stream URL</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="swimlanesContainer"></div>
+      </section>
+
+      <!-- VIEW 2: ROKU SEARCH -->
+      <section id="view-search" class="view-section">
+        <div class="search-layout">
+          <div class="panel-card">
+            <strong>On-Screen Keypad</strong>
+            <div style="display:flex; gap:0.4rem; margin-top:0.65rem;">
+              <input type="text" id="searchInput" placeholder="Type channel name..." style="flex:1;" oninput="runSearch()" />
+              <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
+            </div>
+            <div class="keypad-grid" id="keypadGrid"></div>
+          </div>
+          <div>
+            <div style="margin-bottom:0.75rem; color:var(--text-muted);" id="searchCount">Showing all channels</div>
+            <div class="results-grid" id="searchResultsGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: CHANNEL STORE -->
+      <section id="view-store" class="view-section">
+        <div class="panel-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+            <div>
+              <strong>Customize Your Lineup</strong>
+              <p style="font-size:0.85rem; color:var(--text-muted);">Check or uncheck sources to rebuild your live guide and downloadable M3U playlist.</p>
+            </div>
+            <button class="btn" onclick="rebuildLineup()">🔄 Refresh Lineup Now</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <strong>Countries</strong>
+          <div class="chip-grid" id="storeCountries"></div>
+          <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+            <input type="text" id="customCountryInput" placeholder="Add ISO code (e.g. sn, gb, br)" maxlength="2" />
+            <button class="btn btn-secondary" onclick="addCustomCode('countries', 'customCountryInput')">+ Add Country</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <strong>Languages</strong>
+          <div class="chip-grid" id="storeLanguages"></div>
+          <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+            <input type="text" id="customLangInput" placeholder="Add 3-letter ISO (e.g. fra, eng, wol)" maxlength="3" />
+            <button class="btn btn-secondary" onclick="addCustomCode('languages', 'customLangInput')">+ Add Language</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <strong>Categories</strong>
+          <div class="chip-grid" id="storeCategories"></div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: SMARTERS GITHUB AUTO-SYNC -->
+      <section id="view-sync" class="view-section">
+        <div class="panel-card">
+          <strong>Permanent Self-Updating M3U URL for Smarters Player Lite</strong>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin:0.35rem 0 0.75rem;">Enter your GitHub username and repository name to generate your permanent M3U link.</p>
+          <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+            <input type="text" id="ghUser" placeholder="GitHub Username" value="your-username" oninput="updateSyncFiles()" />
+            <input type="text" id="ghRepo" placeholder="Repository Name" value="my-iptv" oninput="updateSyncFiles()" />
+          </div>
+          <div style="display:flex; gap:0.6rem;">
+            <input type="text" id="permanentM3uUrl" readonly style="flex:1; color:#c084fc; font-family:monospace;" />
+            <button class="btn" onclick="copyText('permanentM3uUrl')">Copy Smarters URL</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <strong>1. config.json</strong>
+            <button class="btn btn-secondary" onclick="copyPre('codeConfig')">Copy JSON</button>
+          </div>
+          <pre id="codeConfig"></pre>
+        </div>
+
+        <div class="panel-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <strong>2. build_m3u.py</strong>
+            <button class="btn btn-secondary" onclick="copyPre('codePython')">Copy Python</button>
+          </div>
+          <pre id="codePython"></pre>
+        </div>
+
+        <div class="panel-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <strong>3. .github/workflows/update.yml</strong>
+            <button class="btn btn-secondary" onclick="copyPre('codeYaml')">Copy Workflow</button>
+          </div>
+          <pre id="codeYaml"></pre>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Floating Roku Remote -->
+  <div class="remote-widget" id="remoteWidget">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:0.75rem; font-weight:800; color:var(--roku-accent);">NIORO REMOTE</span>
+      <button style="background:none; border:none; color:#fff; cursor:pointer; font-size:0.85rem;" onclick="toggleRemote()">—</button>
+    </div>
+    <div id="remoteBody">
+      <div class="dpad">
+        <div></div>
+        <button onclick="moveFocus('up')">▲</button>
+        <div></div>
+        <button onclick="moveFocus('left')">◀</button>
+        <button style="background:#9333ea;" onclick="activateFocused()">OK</button>
+        <button onclick="moveFocus('right')">▶</button>
+        <div></div>
+        <button onclick="moveFocus('down')">▼</button>
+        <div></div>
+      </div>
+      <div style="display:flex; gap:0.35rem; justify-content:center;">
+        <button class="btn btn-secondary" style="padding:0.35rem 0.6rem; font-size:0.75rem;" onclick="switchView('home', document.querySelector('[data-view=home]'))">🏠</button>
+        <button class="btn btn-secondary" style="padding:0.35rem 0.6rem; font-size:0.75rem;" onclick="enterTheaterFullscreen()">⛶</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_IPTV = "https://iptv-org.github.io/iptv";
+    const PRESETS = {
+      countries: [
+        { id: "sn", name: "Senegal" }, { id: "us", name: "USA" }, { id: "fr", name: "France" },
+        { id: "uk", name: "United Kingdom" }, { id: "ca", name: "Canada" }, { id: "ci", name: "Côte d'Ivoire" },
+        { id: "ma", name: "Morocco" }, { id: "ng", name: "Nigeria" }
+      ],
+      languages: [
+        { id: "fra", name: "French" }, { id: "eng", name: "English" },
+        { id: "wol", name: "Wolof" }, { id: "ara", name: "Arabic" }, { id: "spa", name: "Spanish" }
+      ],
+      categories: [
+        { id: "sports", name: "Sports" }, { id: "movies", name: "Movies" },
+        { id: "news", name: "News" }, { id: "general", name: "General" },
+        { id: "music", name: "Music" }, { id: "documentary", name: "Documentary" }
+      ]
+    };
+
+    const config = {
+      countries: ["sn", "us", "fr"],
+      languages: ["fra", "eng"],
+      categories: ["sports", "movies", "news"],
+      remove_duplicates: true,
+      require_https: false
+    };
+
+    let allChannels = [];
+    let favorites = JSON.parse(localStorage.getItem("roku_iptv_favs") || "[]");
+    let currentChannel = null;
+    let hlsInstance = null;
+    let focusRow = 0;
+    let focusCol = 0;
+
+    // Clock
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById("clockDisplay").textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }, 1000);
+
+    function switchView(viewId, btnEl) {
+      document.querySelectorAll(".view-section").forEach(s => s.classList.remove("active"));
+      document.getElementById("view-" + viewId).classList.add("active");
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+      if (btnEl) btnEl.classList.add("active");
+      const titles = {
+        home: "Home — Live Channels",
+        search: "Search",
+        store: "Channel Store — Lineup Builder",
+        sync: "Smarters Player Lite — GitHub Auto-Sync"
+      };
+      document.getElementById("viewTitle").textContent = titles[viewId] || "IPTV Studio";
+      if (viewId === "search") runSearch();
+      if (viewId === "sync") updateSyncFiles();
+    }
+
+    function parseM3U(text, groupLabel) {
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const items = [];
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith("#EXTINF")) {
+          const info = lines[i];
+          const nameMatch = info.split(",").pop().trim() || "Unknown Channel";
+          const logoMatch = info.match(/tvg-logo="([^"]*)"/);
+          const logo = logoMatch ? logoMatch[1] : "";
+          let j = i + 1;
+          while (j < lines.length && lines[j].startsWith("#")) j++;
+          if (j < lines.length && lines[j].startsWith("http")) {
+            items.push({
+              name: nameMatch,
+              logo,
+              group: groupLabel,
+              url: lines[j],
+              rawExtinf: info
+            });
+            i = j;
+          }
+        }
+      }
+      return items;
+    }
+
+    async function rebuildLineup() {
+      document.getElementById("channelStats").textContent = "Fetching live IPTV-org streams...";
+      const sources = [
+        ...config.countries.map(c => ({ url: `${BASE_IPTV}/countries/${c}.m3u`, label: `Country: ${c.toUpperCase()}` })),
+        ...config.languages.map(l => ({ url: `${BASE_IPTV}/languages/${l}.m3u`, label: `Language: ${l.toUpperCase()}` })),
+        ...config.categories.map(cat => ({ url: `${BASE_IPTV}/categories/${cat}.m3u`, label: `Category: ${cat.charAt(0).toUpperCase() + cat.slice(1)}` }))
+      ];
+
+      const seen = new Set();
+      const merged = [];
+
+      await Promise.all(sources.map(async src => {
+        try {
+          const res = await fetch(src.url);
+          if (!res.ok) return;
+          const text = await res.text();
+          const parsed = parseM3U(text, src.label);
+          for (const ch of parsed) {
+            if (config.remove_duplicates && seen.has(ch.url)) continue;
+            seen.add(ch.url);
+            merged.push(ch);
+          }
+        } catch (e) {
+          console.warn("Failed source:", src.url);
+        }
+      }));
+
+      allChannels = merged;
+      document.getElementById("channelStats").textContent = `${allChannels.length} Unique Channels Loaded`;
+      renderSwimlanes();
+      updateSyncFiles();
+    }
+
+    function renderSwimlanes() {
+      const container = document.getElementById("swimlanesContainer");
+      container.innerHTML = "";
+
+      const groups = {};
+      if (favorites.length > 0) {
+        const favChannels = allChannels.filter(c => favorites.includes(c.url));
+        if (favChannels.length > 0) groups["⭐ My Favorites"] = favChannels;
+      }
+
+      for (const ch of allChannels) {
+        if (!groups[ch.group]) groups[ch.group] = [];
+        groups[ch.group].push(ch);
+      }
+
+      let rowIdx = 0;
+      for (const [groupName, channels] of Object.entries(groups)) {
+        const lane = document.createElement("div");
+        lane.className = "swimlane";
+        lane.innerHTML = `
+          <div class="swimlane-header">
+            <span class="swimlane-title">${groupName} (${channels.length})</span>
+          </div>
+          <div class="swimlane-row" data-row="${rowIdx}"></div>
+        `;
+        const rowEl = lane.querySelector(".swimlane-row");
+        channels.slice(0, 40).forEach((ch, colIdx) => {
+          const isFav = favorites.includes(ch.url);
+          const tile = document.createElement("div");
+          tile.className = "channel-tile";
+          tile.dataset.row = rowIdx;
+          tile.dataset.col = colIdx;
+          tile.innerHTML = `
+            <button class="fav-star ${isFav ? "active" : ""}" onclick="event.stopPropagation(); toggleFavUrl('${ch.url.replace(/'/g, "\\'")}')">${isFav ? "★" : "☆"}</button>
+            <div class="tile-logo">
+              ${ch.logo ? `<img src="${ch.logo}" onerror="this.style.display='none'" alt="" />` : `<span style="font-weight:800; color:#a855f7;">TV</span>`}
+            </div>
+            <div>
+              <div class="tile-name" title="${ch.name}">${ch.name}</div>
+              <div class="tile-group">${ch.group}</div>
+            </div>
+          `;
+          tile.onclick = () => {
+            if (currentChannel && currentChannel.url === ch.url) {
+              enterTheaterFullscreen();
+            } else {
+              playChannel(ch);
+            }
+          };
+          rowEl.appendChild(tile);
+        });
+        container.appendChild(lane);
+        rowIdx++;
+      }
+      highlightFocusedTile();
+    }
+
+    function playChannel(ch) {
+      currentChannel = ch;
+      const video = document.getElementById("hlsVideo");
+      const status = document.getElementById("playerStatus");
+      document.getElementById("nowPlayingTitle").textContent = ch.name;
+      document.getElementById("nowPlayingGroup").textContent = `${ch.group} • ${ch.url}`;
+      updateHeroFavButton();
+
+      status.classList.remove("hidden");
+      status.innerHTML = `<div style="font-weight:700;">Connecting to ${ch.name}...</div>`;
+
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
+
+      if (Hls.isSupported() && ch.url.includes(".m3u8")) {
+        hlsInstance = new Hls();
+        hlsInstance.loadSource(ch.url);
+        hlsInstance.attachMedia(video);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+          status.classList.add("hidden");
+          video.play().catch(() => {});
+        });
+        hlsInstance.on(Hls.Events.ERROR, (_, data) => {
+          if (data.fatal) {
+            status.classList.remove("hidden");
+            status.innerHTML = `<div style="color:#fca5a5; font-weight:700;">Stream offline or geo-blocked in browser</div><div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">Try copying the URL into Smarters Player Lite or VLC.</div>`;
+          }
+        });
+      } else {
+        video.src = ch.url;
+        video.onloadeddata = () => status.classList.add("hidden");
+        video.onerror = () => {
+          status.classList.remove("hidden");
+          status.innerHTML = `<div style="color:#fca5a5; font-weight:700;">Unable to play directly in browser</div>`;
+        };
+        video.play().catch(() => {});
+      }
+    }
+
+    function enterTheaterFullscreen() {
+      const video = document.getElementById("hlsVideo");
+      if (video.requestFullscreen) video.requestFullscreen();
+      else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+    }
+
+    function toggleFavUrl(url) {
+      const idx = favorites.indexOf(url);
+      if (idx > -1) favorites.splice(idx, 1);
+      else favorites.push(url);
+      localStorage.setItem("roku_iptv_favs", JSON.stringify(favorites));
+      updateHeroFavButton();
+      renderSwimlanes();
+    }
+
+    function toggleCurrentFavorite() {
+      if (currentChannel) toggleFavUrl(currentChannel.url);
+    }
+
+    function updateHeroFavButton() {
+      const btn = document.getElementById("heroFavBtn");
+      if (!currentChannel) return;
+      const isFav = favorites.includes(currentChannel.url);
+      btn.textContent = isFav ? "★ Favorited" : "☆ Add to Favorites";
+    }
+
+    function copyCurrentStreamUrl() {
+      if (!currentChannel) return;
+      navigator.clipboard.writeText(currentChannel.url);
+      alert("Stream URL copied!");
+    }
+
+    function downloadM3U() {
+      const lines = ["#EXTM3U"];
+      for (const ch of allChannels) {
+        lines.push(`#EXTINF:-1 tvg-logo="${ch.logo}" group-title="${ch.group}",${ch.name}`);
+        lines.push(ch.url);
+      }
+      const blob = new Blob([lines.join("\n") + "\n"], { type: "audio/x-mpegurl" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "playlist.m3u";
+      a.click();
+    }
+
+    // Search & Keypad
+    function initKeypad() {
+      const keys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("");
+      const grid = document.getElementById("keypadGrid");
+      keys.forEach(k => {
+        const btn = document.createElement("button");
+        btn.className = "key-btn";
+        btn.textContent = k;
+        btn.onclick = () => {
+          document.getElementById("searchInput").value += k.toLowerCase();
+          runSearch();
+        };
+        grid.appendChild(btn);
+      });
+      const spaceBtn = document.createElement("button");
+      spaceBtn.className = "key-btn";
+      spaceBtn.style.gridColumn = "span 3";
+      spaceBtn.textContent = "SPACE";
+      spaceBtn.onclick = () => { document.getElementById("searchInput").value += " "; runSearch(); };
+      grid.appendChild(spaceBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "key-btn";
+      delBtn.style.gridColumn = "span 3";
+      delBtn.textContent = "⌫ DEL";
+      delBtn.onclick = () => {
+        const inp = document.getElementById("searchInput");
+        inp.value = inp.value.slice(0, -1);
+        runSearch();
+      };
+      grid.appendChild(delBtn);
+    }
+
+    function clearSearch() {
+      document.getElementById("searchInput").value = "";
+      runSearch();
+    }
+
+    function runSearch() {
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      const filtered = q ? allChannels.filter(c => c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)) : allChannels.slice(0, 60);
+      document.getElementById("searchCount").textContent = `Showing ${filtered.length} matching channels`;
+      const grid = document.getElementById("searchResultsGrid");
+      grid.innerHTML = "";
+      filtered.slice(0, 80).forEach(ch => {
+        const tile = document.createElement("div");
+        tile.className = "channel-tile";
+        tile.style.maxWidth = "none";
+        tile.innerHTML = `
+          <div class="tile-logo">
+            ${ch.logo ? `<img src="${ch.logo}" onerror="this.style.display='none'" alt="" />` : `<span style="font-weight:800; color:#a855f7;">TV</span>`}
+          </div>
+          <div>
+            <div class="tile-name">${ch.name}</div>
+            <div class="tile-group">${ch.group}</div>
+          </div>
+        `;
+        tile.onclick = () => {
+          switchView("home", document.querySelector('[data-view="home"]'));
+          playChannel(ch);
+        };
+        grid.appendChild(tile);
+      });
+    }
+
+    // Channel Store
+    function renderStore() {
+      renderStoreSection("countries", "storeCountries");
+      renderStoreSection("languages", "storeLanguages");
+      renderStoreSection("categories", "storeCategories");
+    }
+
+    function renderStoreSection(key, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = "";
+      const knownIds = new Set(PRESETS[key].map(i => i.id));
+      const allItems = [...PRESETS[key]];
+      config[key].forEach(id => {
+        if (!knownIds.has(id)) allItems.push({ id, name: id.toUpperCase() });
+      });
+
+      allItems.forEach(item => {
+        const checked = config[key].includes(item.id) ? "checked" : "";
+        const label = document.createElement("label");
+        label.className = "chip-label";
+        label.innerHTML = `<input type="checkbox" ${checked} onchange="toggleConfigItem('${key}', '${item.id}')" /> ${item.name}`;
+        container.appendChild(label);
+      });
+    }
+
+    function toggleConfigItem(key, id) {
+      const idx = config[key].indexOf(id);
+      if (idx > -1) config[key].splice(idx, 1);
+      else config[key].push(id);
+      updateSyncFiles();
+    }
+
+    function addCustomCode(key, inputId) {
+      const val = document.getElementById(inputId).value.trim().toLowerCase();
+      if (!val) return;
+      if (!config[key].includes(val)) config[key].push(val);
+      document.getElementById(inputId).value = "";
+      renderStore();
+      updateSyncFiles();
+    }
+
+    // GitHub Sync Tab
+    function updateSyncFiles() {
+      const user = document.getElementById("ghUser").value.trim() || "your-username";
+      const repo = document.getElementById("ghRepo").value.trim() || "my-iptv";
+      document.getElementById("permanentM3uUrl").value = `https://${user}.github.io/${repo}/playlist.m3u`;
+      document.getElementById("codeConfig").textContent = JSON.stringify(config, null, 2);
+      document.getElementById("codePython").textContent = `import json, re, urllib.request
+
+BASE_URL = "https://iptv-org.github.io/iptv"
+
+def fetch_m3u(url):
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return resp.read().decode("utf-8", errors="ignore")
+    except Exception:
+        return ""
+
+def main():
+    with open("config.json", "r", encoding="utf-8") as f:
+        cfg = json.load(f)
+    sources = (
+        [(f"{BASE_URL}/countries/{c}.m3u", f"Country: {c.upper()}") for c in cfg.get("countries", [])] +
+        [(f"{BASE_URL}/languages/{l}.m3u", f"Language: {l.upper()}") for l in cfg.get("languages", [])] +
+        [(f"{BASE_URL}/categories/{cat}.m3u", f"Category: {cat.capitalize()}") for cat in cfg.get("categories", [])]
+    )
+    seen, out = set(), ["#EXTM3U"]
+    for url, label in sources:
+        lines = [l.strip() for l in fetch_m3u(url).splitlines() if l.strip()]
+        for i, line in enumerate(lines):
+            if line.startswith("#EXTINF") and i + 1 < len(lines):
+                stream = lines[i + 1]
+                if stream.startswith("http") and stream not in seen:
+                    seen.add(stream)
+                    ext = re.sub(r'group-title="[^"]*"', f'group-title="{label}"', line) if 'group-title="' in line else line.replace("#EXTINF:-1", f'#EXTINF:-1 group-title="{label}"', 1)
+                    out.extend([ext, stream])
+    with open("playlist.m3u", "w", encoding="utf-8") as f:
+        f.write("\n".join(out) + "\n")
+
+if __name__ == "__main__":
+    main()`;
+
+      document.getElementById("codeYaml").textContent = `name: Build Custom IPTV Playlist
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  push:
+    paths: ['config.json', 'build_m3u.py']
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python build_m3u.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add playlist.m3u
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update playlist.m3u" && git push)`;
+    }
+
+    function copyText(id) {
+      navigator.clipboard.writeText(document.getElementById(id).value);
+      alert("Copied!");
+    }
+    function copyPre(id) {
+      navigator.clipboard.writeText(document.getElementById(id).textContent);
+      alert("Code copied!");
+    }
+
+    // D-pad / Keyboard Navigation
+    function highlightFocusedTile() {
+      document.querySelectorAll(".channel-tile.focused").forEach(el => el.classList.remove("focused"));
+      const target = document.querySelector(`.channel-tile[data-row="${focusRow}"][data-col="${focusCol}"]`);
+      if (target) {
+        target.classList.add("focused");
+        target.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+    }
+
+    function moveFocus(dir) {
+      const rows = document.querySelectorAll(".swimlane-row");
+      if (!rows.length) return;
+      if (dir === "down") focusRow = Math.min(rows.length - 1, focusRow + 1);
+      if (dir === "up") focusRow = Math.max(0, focusRow - 1);
+      const maxCols = rows[focusRow].querySelectorAll(".channel-tile").length - 1;
+      if (dir === "right") focusCol = Math.min(maxCols, focusCol + 1);
+      if (dir === "left") focusCol = Math.max(0, focusCol - 1);
+      focusCol = Math.min(focusCol, maxCols);
+      highlightFocusedTile();
+    }
+
+    function activateFocused() {
+      const target = document.querySelector(`.channel-tile[data-row="${focusRow}"][data-col="${focusCol}"]`);
+      if (target) target.click();
+    }
+
+    function toggleRemote() {
+      const w = document.getElementById("remoteWidget");
+      const b = document.getElementById("remoteBody");
+      w.classList.toggle("collapsed");
+      b.style.display = w.classList.contains("collapsed") ? "none" : "block";
+    }
+
+    document.addEventListener("keydown", e => {
+      if (document.activeElement.tagName === "INPUT") return;
+      if (e.key === "ArrowRight") { e.preventDefault(); moveFocus("right"); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); moveFocus("left"); }
+      if (e.key === "ArrowDown") { e.preventDefault(); moveFocus("down"); }
+      if (e.key === "ArrowUp") { e.preventDefault(); moveFocus("up"); }
+      if (e.key === "Enter") { e.preventDefault(); activateFocused(); }
+    });
+
+    // Init
+    initKeypad();
+    renderStore();
+    updateSyncFiles();
+    rebuildLineup();
+  </script>
+</body>
+</html>
