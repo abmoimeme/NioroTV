@@ -27,6 +27,9 @@
         "lang": {
           ".validate": "newData.isString() && newData.val().length <= 10"
         },
+        "net": {
+          ".validate": "newData.isString() && newData.val().length <= 10"
+        },
         "$other": {
           ".validate": false
         }
@@ -71,7 +74,7 @@
           ".validate": "newData.isString() && newData.val().length <= 40"
         },
         "type": {
-          ".validate": "newData.val() == 'visit' || newData.val() == 'play' || newData.val() == 'watch' || newData.val() == 'search' || newData.val() == 'fav'"
+          ".validate": "newData.val() == 'visit' || newData.val() == 'play' || newData.val() == 'watch' || newData.val() == 'search' || newData.val() == 'fav' || newData.val() == 'start' || newData.val() == 'stall' || newData.val() == 'fail'"
         },
         "ch": {
           ".validate": "newData.isString() && newData.val().length <= 120"
@@ -87,6 +90,9 @@
         },
         "res": {
           ".validate": "newData.isNumber()"
+        },
+        "why": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
         },
         "$other": {
           ".validate": false

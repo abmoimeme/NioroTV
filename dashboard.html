@@ -64,9 +64,15 @@
     <div class="grid">
       <div class="panel" style="grid-column:1/-1">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.4rem"><h2 style="margin:0">Trends</h2>
-          <div class="seg" id="metric"><button data-m="plays" class="on">Plays</button><button data-m="hours">Watch hours</button><button data-m="active">Active viewers</button><button data-m="fresh">New viewers</button></div></div>
+          <div class="seg" id="metric"><button data-m="plays" class="on">Plays</button><button data-m="hours">Watch hours</button><button data-m="active">Active viewers</button><button data-m="fresh">New viewers</button><button data-m="issues">Stream problems</button></div></div>
         <div class="cols" id="trend"></div><div class="clab" id="trendLab"></div>
       </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel" style="grid-column:1/-1"><h2>📡 Stream health <span class="muted">(failed streams, buffering, slow starts)</span></h2><div class="tiles" id="hTiles" style="margin-bottom:.8rem"></div><div id="hTable"></div></div>
+      <div class="panel" style="border-color:var(--bad)"><h2>🚫 Likely dead or unreliable</h2><div id="hDead"></div></div>
+      <div class="panel"><h2>Quality by country &amp; connection</h2><div id="hCountry"></div><div style="height:.6rem"></div><div id="hNet"></div></div>
     </div>
 
     <div class="grid">
@@ -211,6 +217,7 @@
           if (metric === "plays" && e.type === "play") val[i]++;
           else if (metric === "hours" && e.type === "watch") val[i] += (e.secs || 0) / 3600;
           else if (metric === "active") sets[i].add(e.v);
+          else if (metric === "issues" && ((e.type === "fail" && e.why !== "abandoned") || e.type === "stall")) val[i]++;
           else if (metric === "fresh" && !seenBefore.has(e.v) && (firstSeen[e.v] === undefined || firstSeen[e.v] > i)) firstSeen[e.v] = i;
         });
         if (metric === "active") sets.forEach((s, i) => (val[i] = s.size));
@@ -239,6 +246,38 @@
         $("hours").innerHTML = hrs.map((c, h) => `<div title="${h}:00 — ${c} plays" style="height:${Math.max(2, (c / hm) * 100)}%"></div>`).join("");
         $("hlab").innerHTML = hrs.map((_, h) => `<span>${h % 3 === 0 ? h : ""}</span>`).join("");
 
+        // ---- stream health ----
+        const CH = {}, mk = (c, g) => CH[c] || (CH[c] = { g, plays: 0, fails: 0, gaveUp: 0, stalls: 0, stallSecs: 0, startSum: 0, startN: 0, who: new Set(), last: 0, why: {} });
+        plays.forEach((e) => { mk(e.ch, e.g).plays++; });
+        const fx = (e, c) => { c.who.add(e.v); if (e.t > c.last) c.last = e.t; };
+        let failsReal = 0, stallN = 0, stallS = 0, startSum = 0, startN = 0;
+        cur.forEach((e) => {
+          if (e.type === "fail") { const c = mk(e.ch, e.g); if (e.why === "abandoned") { c.gaveUp++; } else { c.fails++; failsReal++; c.why[e.why || "unknown"] = (c.why[e.why || "unknown"] || 0) + 1; fx(e, c); } }
+          else if (e.type === "stall") { const c = mk(e.ch, e.g); c.stalls++; c.stallSecs += e.secs || 0; stallN++; stallS += e.secs || 0; fx(e, c); }
+          else if (e.type === "start") { const c = mk(e.ch, e.g); c.startSum += e.secs || 0; c.startN++; startSum += e.secs || 0; startN++; }
+        });
+        const watchSecs = watch.reduce((a, e) => a + (e.secs || 0), 0);
+        const okRate = plays.length ? Math.max(0, 100 - (failsReal / plays.length) * 100) : null;
+        const tl = (n, l, d) => `<div class="tile"><div class="n">${esc(n)}</div><div class="l">${l}</div><div class="d">${d || ""}</div></div>`;
+        $("hTiles").innerHTML = [
+          tl(okRate == null ? "—" : okRate.toFixed(0) + "%", "Streams that played", failsReal + " failed of " + plays.length),
+          tl(startN ? (startSum / startN).toFixed(1) + "s" : "—", "Average start time", startN + " measured"),
+          tl(stallN, "Buffering interruptions", fmtDur(stallS) + " total"),
+          tl(watchSecs + stallS ? ((stallS / (watchSecs + stallS)) * 100).toFixed(1) + "%" : "—", "Time spent buffering", "of viewing time"),
+          tl(stallN && watchSecs ? (stallN / (watchSecs / 3600)).toFixed(1) : "—", "Stalls per watch-hour", "")
+        ].join("");
+        const prob = Object.entries(CH).map(([c, o]) => ({ c, o, score: o.fails * 3 + o.stalls + o.gaveUp }))
+          .filter((x) => x.score > 0 || (x.o.startN && x.o.startSum / x.o.startN > 8)).sort((a, b) => b.score - a.score).slice(0, 15);
+        $("hTable").innerHTML = prob.length ? `<table><tr><th>Channel</th><th>Plays</th><th>Failed</th><th>Gave up</th><th>Stalls</th><th>Buffering</th><th>Avg start</th><th>Viewers hit</th><th>Main reason</th><th>Last issue</th></tr>${prob.map(({ c, o }) => { const why = top(o.why, 1)[0]; return `<tr><td title="${esc(o.g)}">${esc(c)}</td><td>${o.plays}</td><td class="${o.fails ? "zero" : ""}">${o.fails}${o.plays ? " (" + Math.round((o.fails / o.plays) * 100) + "%)" : ""}</td><td>${o.gaveUp}</td><td>${o.stalls}</td><td>${fmtDur(o.stallSecs)}</td><td>${o.startN ? (o.startSum / o.startN).toFixed(1) + "s" : "—"}</td><td>${o.who.size}</td><td>${why ? esc(why[0]) : "—"}</td><td>${ago(o.last)}</td></tr>`; }).join("")}</table>` : '<div class="empty">No stream problems recorded in this range. 🎉</div>';
+        const dead = Object.entries(CH).filter(([, o]) => (o.plays >= 2 && o.fails / Math.max(1, o.plays) >= 0.5) || o.fails >= 3).sort((a, b) => b[1].fails - a[1].fails).slice(0, 10);
+        $("hDead").innerHTML = dead.length ? `<table><tr><th>Channel</th><th>Failed / plays</th><th>Viewers</th><th>Suggestion</th></tr>${dead.map(([c, o]) => `<tr><td>${esc(c)}</td><td class="zero">${o.fails} / ${o.plays}</td><td>${o.who.size}</td><td><span class="chip">${o.fails >= o.plays ? "remove or replace" : "needs a backup source"}</span></td></tr>`).join("")}</table>` : '<div class="empty">No channels look dead right now.</div>';
+        const grpQ = (keyFn) => { const m = {}; const row = (k) => m[k] || (m[k] = { plays: 0, fails: 0, stalls: 0, sSecs: 0, startSum: 0, startN: 0 });
+          cur.forEach((e) => { const v = data.viewers[e.v] || {}, k = keyFn(v); if (e.type === "play") row(k).plays++; else if (e.type === "fail" && e.why !== "abandoned") row(k).fails++; else if (e.type === "stall") { row(k).stalls++; row(k).sSecs += e.secs || 0; } else if (e.type === "start") { row(k).startSum += e.secs || 0; row(k).startN++; } });
+          const rows = Object.entries(m).filter(([, o]) => o.plays).sort((a, b) => b[1].plays - a[1].plays).slice(0, 8);
+          return rows.length ? `<table><tr><th></th><th>Plays</th><th>Failed</th><th>Stalls</th><th>Avg start</th></tr>${rows.map(([k, o]) => `<tr><td>${esc(k)}</td><td>${o.plays}</td><td class="${o.fails ? "zero" : ""}">${Math.round((o.fails / o.plays) * 100)}%</td><td>${o.stalls} (${fmtDur(o.sSecs)})</td><td>${o.startN ? (o.startSum / o.startN).toFixed(1) + "s" : "—"}</td></tr>`).join("")}</table>` : '<div class="empty">No data yet.</div>'; };
+        $("hCountry").innerHTML = "<div class='muted'>By country</div>" + grpQ((v) => countryOf(v.tz));
+        $("hNet").innerHTML = "<div class='muted'>By connection type</div>" + grpQ((v) => (v.net ? v.net.toUpperCase() : "Unknown"));
+
         // searches + demand
         const sq = {};
         cur.filter((e) => e.type === "search").forEach((e) => { const o = sq[e.q] || (sq[e.q] = { n: 0, zero: 0, who: new Set() }); o.n++; if (!e.res) o.zero++; o.who.add(e.v); });
@@ -265,6 +304,7 @@
           if (dc >= 3) al.push(`<div>🔀 <b>${esc(v.name)}</b> used <b>${dc} different devices</b> — the code may be shared.</div>`);
           if (v.lastSeen && Date.now() - v.lastSeen > 7 * DAY) al.push(`<div>💤 <b>${esc(v.name)}</b> hasn't visited for ${Math.round((Date.now() - v.lastSeen) / DAY)} days.</div>`);
         });
+        Object.entries(CH).forEach(([c, o]) => { if (o.fails >= 3) al.push(`<div>📉 <b>${esc(c)}</b> failed ${o.fails} times for ${o.who.size} viewer(s).</div>`); else if (o.stallSecs >= 120) al.push(`<div>⏳ <b>${esc(c)}</b> buffered for ${fmtDur(o.stallSecs)} in total (${o.stalls} stalls).</div>`); });
         const req = Object.values(data.requests).filter((r) => r.status === "new" && Date.now() - (r.t || 0) > 3 * DAY).length;
         if (req) al.push(`<div>📬 ${req} request(s) have been waiting more than 3 days.</div>`);
         if (sc.zero >= 5) al.push(`<div>🎯 ${sc.zero} searches found nothing in this range — see "Channels to add".</div>`);
@@ -280,7 +320,7 @@
         const v = data.viewers[id] || {}, evs = data.events.filter((e) => e.v === id).sort((a, b) => b.t - a.t);
         const ch = {}, sq = {}; let secs = 0, plays = 0;
         evs.forEach((e) => { if (e.type === "play") { plays++; ch[e.ch] = (ch[e.ch] || 0) + 1; } if (e.type === "watch") secs += e.secs || 0; if (e.type === "search") sq[e.q] = (sq[e.q] || 0) + 1; });
-        const line = (e) => { const t = new Date(e.t).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); const txt = e.type === "play" ? "▶ " + esc(e.ch) : e.type === "watch" ? "⏱ " + esc(e.ch) + " · " + fmtDur(e.secs) : e.type === "search" ? "🔍 " + esc(e.q) + (e.res ? ` (${e.res} results)` : ' <span class="zero">(no results)</span>') : e.type === "fav" ? "★ " + esc(e.ch) : "👋 opened NioroTV"; return `<div><span class="muted">${t}</span> &nbsp; ${txt}</div>`; };
+        const line = (e) => { const t = new Date(e.t).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); const txt = e.type === "play" ? "▶ " + esc(e.ch) : e.type === "watch" ? "⏱ " + esc(e.ch) + " · " + fmtDur(e.secs) : e.type === "search" ? "🔍 " + esc(e.q) + (e.res ? ` (${e.res} results)` : ' <span class="zero">(no results)</span>') : e.type === "fav" ? "★ " + esc(e.ch) : e.type === "fail" ? (e.why === "abandoned" ? "🏃 gave up waiting on " + esc(e.ch) + " (" + e.secs + "s)" : '<span class="zero">⚠ failed to play ' + esc(e.ch) + " (" + esc(e.why) + ")</span>") : e.type === "stall" ? "⏳ buffering " + e.secs + "s on " + esc(e.ch) : e.type === "start" ? "⚡ " + esc(e.ch) + " started in " + e.secs + "s" : "👋 opened NioroTV"; return `<div><span class="muted">${t}</span> &nbsp; ${txt}</div>`; };
         $("modalBox").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><h1>${esc(v.name || id)}</h1><button class="btn sec" id="mClose">Close</button></div>
           <div class="muted" style="margin:.3rem 0 .8rem">${esc(countryOf(v.tz))} · ${esc(langOf(v.lang))} · ${esc(v.device || "unknown device")} · ${Object.keys((data.devices || {})[id] || {}).length || "?"} device(s) · last seen ${ago(v.lastSeen)} · ${v.visits || 0} visits · ${fmtDur(v.watchSecs)} total watch</div>
           <div class="grid"><div><h2>Favorite channels (range)</h2><div id="mCh"></div></div><div><h2>Searches (range)</h2><div id="mQ"></div></div></div>
@@ -301,7 +341,7 @@
       const csv = (rows) => rows.map((r) => r.map((c) => { c = String(c == null ? "" : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(",")).join("\n");
       function download(name, text) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/csv" })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
       $("expV").onclick = () => download("nioro-viewers.csv", csv([["id", "name", "country_est", "timezone", "language", "device", "devices_count", "last_seen", "visits", "watch_seconds"]].concat(Object.entries(data.viewers).map(([id, v]) => [id, v.name, countryOf(v.tz), v.tz, v.lang, v.device, Object.keys((data.devices || {})[id] || {}).length, v.lastSeen ? new Date(v.lastSeen).toISOString() : "", v.visits || 0, v.watchSecs || 0]))));
-      $("expE").onclick = () => download("nioro-activity.csv", csv([["time", "viewer_id", "name", "type", "channel", "group", "query", "results", "seconds"]].concat(data.events.filter((e) => e.t >= sinceNow()).map((e) => [new Date(e.t).toISOString(), e.v, e.n, e.type, e.ch, e.g, e.q, e.res, e.secs]))));
+      $("expE").onclick = () => download("nioro-activity.csv", csv([["time", "viewer_id", "name", "type", "channel", "group", "query", "results", "seconds", "reason"]].concat(data.events.filter((e) => e.t >= sinceNow()).map((e) => [new Date(e.t).toISOString(), e.v, e.n, e.type, e.ch, e.g, e.q, e.res, e.secs, e.why]))));
     }
   </script>
 </body>

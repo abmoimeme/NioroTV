@@ -755,6 +755,7 @@
         });
         hlsInstance.on(Hls.Events.ERROR, (_, data) => {
           if (data.fatal) {
+            if (window.NioroTrack) NioroTrack.fail("hls:" + (data.details || data.type));
             status.classList.remove("hidden");
             status.innerHTML = `<div style="color:#fca5a5; font-weight:700;">Stream offline or geo-blocked in browser</div><div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">Try copying the URL into Smarters Player Lite or VLC.</div>`;
           }
@@ -763,6 +764,7 @@
         video.src = ch.url;
         video.onloadeddata = () => status.classList.add("hidden");
         video.onerror = () => {
+          if (window.NioroTrack) NioroTrack.fail("media");
           status.classList.remove("hidden");
           status.innerHTML = `<div style="color:#fca5a5; font-weight:700;">Unable to play directly in browser</div>`;
         };
@@ -1059,7 +1061,9 @@ jobs:
           NioroTrack.init(ctx);
           const vEl = document.getElementById("hlsVideo");
           vEl.addEventListener("playing", () => NioroTrack.playing());
-          ["pause", "ended", "error", "waiting"].forEach(e => vEl.addEventListener(e, () => NioroTrack.paused()));
+          ["pause", "ended"].forEach(e => vEl.addEventListener(e, () => NioroTrack.paused()));
+          vEl.addEventListener("waiting", () => NioroTrack.waiting());
+          vEl.addEventListener("error", () => NioroTrack.fail("media:" + ((vEl.error && vEl.error.code) || "")));
         }
         if (!ctx.isAdmin) document.querySelector('[data-view="sync"]').style.display = "none";
         if (!lineupStarted) { lineupStarted = true; rebuildLineup(); }

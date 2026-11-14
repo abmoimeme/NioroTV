@@ -3,7 +3,7 @@
   const cfg = window.FIREBASE_CONFIG || {};
   const on = !!(window.firebase && cfg.apiKey && !String(cfg.apiKey).startsWith("PASTE"));
   const api = { enabled: on };
-  let db, TS, INC, vid, name, presRef, cur = null, acc = 0, ps = 0, searchTimer = null;
+  let db, TS, INC, vid, name, presRef, cur = null, acc = 0, ps = 0, searchTimer = null, loadTimer = null, stallAt = 0;
 
   const clip = (s, n) => String(s || "").slice(0, n);
   const push = (path, obj) => { try { db.ref(path).push(obj); } catch (e) {} };
@@ -31,6 +31,7 @@
       db.ref("viewers/" + vid).update({ tz, lang }).catch(() => {});
       db.ref("devices/" + vid + "/" + clip(did, 20)).set(TS).catch(() => {});
     } catch (e) {}
+    try { const c = navigator.connection || {}; if (c.effectiveType) db.ref("viewers/" + vid).update({ net: clip(c.effectiveType, 10) }).catch(() => {}); } catch (e) {}
     ev("visit", {});
     setInterval(heartbeat, 60000);
     document.addEventListener("visibilitychange", () => { if (document.hidden) heartbeat(); });
@@ -44,17 +45,37 @@
     try { db.ref("viewers/" + vid).update({ watchSecs: INC(s), lastSeen: TS }); } catch (e) {}
     acc = 0;
   }
+  const r1 = (n) => Math.round(n * 10) / 10;
   function pause() { if (cur && ps) { acc += Date.now() - ps; ps = 0; } }
-  function heartbeat() { if (!db) return; const was = !!ps; pause(); logAcc(); if (was && !document.hidden) ps = Date.now(); }
-  function flush() { pause(); logAcc(); cur = null; try { presRef.update({ ch: "", g: "" }); } catch (e) {} }
+  function heartbeat() { if (!db) return;
+    if (cur && stallAt && Date.now() - stallAt > 30000) api.fail("stalled"); const was = !!ps; pause(); logAcc(); if (was && !document.hidden) ps = Date.now(); }
+  function flush() {
+    clearTimeout(loadTimer);
+    if (cur && !cur.started && !cur.failed) { const w = (Date.now() - cur.t0) / 1000; if (w >= 4) ev("fail", { ch: clip(cur.ch, 120), g: clip(cur.g, 60), why: "abandoned", secs: r1(w) }); }
+    if (cur && stallAt) { const st = (Date.now() - stallAt) / 1000; if (st >= 1) ev("stall", { ch: clip(cur.ch, 120), g: clip(cur.g, 60), secs: r1(Math.min(st, 3600)) }); }
+    stallAt = 0;
+    pause(); logAcc(); cur = null; try { presRef.update({ ch: "", g: "" }); } catch (e) {} }
 
   api.play = function (ch) {
     if (!db) return; flush();
-    cur = { ch: ch.name, g: ch.group }; acc = 0; ps = 0;
+    cur = { ch: ch.name, g: ch.group, t0: Date.now(), started: false, failed: false }; acc = 0; ps = 0; stallAt = 0;
+    loadTimer = setTimeout(() => api.fail("timeout"), 20000);
     ev("play", { ch: clip(ch.name, 120), g: clip(ch.group, 60) });
     try { presRef.update({ ch: clip(ch.name, 120), g: clip(ch.group, 60) }); } catch (e) {}
   };
-  api.playing = function () { if (db && cur && !ps) ps = Date.now(); };
+  api.playing = function () {
+    if (!db || !cur) return;
+    const now = Date.now();
+    if (!cur.started) { cur.started = true; clearTimeout(loadTimer); ev("start", { ch: clip(cur.ch, 120), g: clip(cur.g, 60), secs: r1((now - cur.t0) / 1000) }); }
+    if (stallAt) { const st = (now - stallAt) / 1000; stallAt = 0; if (st >= 1) ev("stall", { ch: clip(cur.ch, 120), g: clip(cur.g, 60), secs: r1(Math.min(st, 3600)) }); }
+    if (!ps) ps = now;
+  };
+  api.waiting = function () { if (!db || !cur) return; pause(); if (cur.started && !stallAt) stallAt = Date.now(); };
+  api.fail = function (why) {
+    if (!db || !cur || cur.failed) return;
+    cur.failed = true; clearTimeout(loadTimer); pause();
+    ev("fail", { ch: clip(cur.ch, 120), g: clip(cur.g, 60), why: clip(why, 60), secs: r1((Date.now() - cur.t0) / 1000) });
+  };
   api.paused = function () { if (db) pause(); };
   api.search = function (q, count) {
     if (!db) return; clearTimeout(searchTimer);
