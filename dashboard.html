@@ -135,7 +135,7 @@
       $("loginMsg").textContent = "Firebase isn't configured yet (firebase-config.js)."; $("signin").disabled = true;
     } else {
       firebase.initializeApp(cfg);
-      try { if (cfg.appCheckSiteKey && firebase.appCheck) firebase.appCheck().activate(cfg.appCheckSiteKey, true); } catch (e) {}
+      try { if (cfg.appCheckSiteKey && firebase.appCheck) firebase.appCheck().activate(cfg.appCheckType === "enterprise" ? new firebase.appCheck.ReCaptchaEnterpriseProvider(cfg.appCheckSiteKey) : cfg.appCheckSiteKey, true); } catch (e) { console.warn("App Check not started", e); }
       const auth = firebase.auth(), db = firebase.database();
       let listeners = [], evStop = null, data = blank(), metric = "plays";
       function blank() { return { viewers: {}, presence: {}, events: [], requests: {}, devices: {} }; }

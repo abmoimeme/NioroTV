@@ -13,7 +13,7 @@
     if (!on || db) return;
     try {
       if (!firebase.apps.length) firebase.initializeApp(cfg);
-      try { if (cfg.appCheckSiteKey && firebase.appCheck) firebase.appCheck().activate(cfg.appCheckSiteKey, true); } catch (e) {}
+      try { if (cfg.appCheckSiteKey && firebase.appCheck) firebase.appCheck().activate(cfg.appCheckType === "enterprise" ? new firebase.appCheck.ReCaptchaEnterpriseProvider(cfg.appCheckSiteKey) : cfg.appCheckSiteKey, true); } catch (e) { console.warn("App Check not started", e); }
       db = firebase.database(); TS = firebase.database.ServerValue.TIMESTAMP;
       INC = (n) => firebase.database.ServerValue.increment(n);
     } catch (e) { return; }
