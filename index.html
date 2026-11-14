@@ -353,6 +353,32 @@
       cursor: pointer;
     }
     .dpad button:hover { background: var(--roku-glow); }
+
+    /* ---- TV mode (body.tv): big text, focus rings, no mouse-only chrome ---- */
+    body.tv { font-size: 22px; }
+    body.tv .sidebar, body.tv .remote-widget, body.tv .view-switch, body.tv .hero-meta, body.tv .topbar span { display: none !important; }
+    body.tv .app-shell { display: block; }
+    body.tv .main-content { padding: 1rem 2rem; }
+    body.tv .topbar h2 { font-size: 1.9rem !important; }
+    body.tv .icon-btn { width: 64px; height: 64px; }
+    body.tv .icon-btn svg { width: 32px; height: 32px; }
+    body.tv .hero-player { grid-template-columns: 1fr; padding: .6rem; margin-bottom: 1rem; }
+    body.tv .video-wrap { aspect-ratio: auto; height: 30vh; }
+    body.tv .video-wrap:fullscreen, body.tv .video-wrap:-webkit-full-screen { height: 100vh; border: 0; border-radius: 0; }
+    body.tv .guide { grid-template-columns: 300px 1fr; height: calc(100vh - 30vh - 190px); min-height: 300px; }
+    body.tv .guide-cat { font-size: 1.25rem; padding: .85rem 1rem; }
+    body.tv .g-row { grid-template-columns: 74px 96px 1fr; }
+    body.tv .g-logo { width: 96px; height: 70px; }
+    body.tv .g-name { font-size: 1.45rem; }
+    body.tv .g-group { font-size: 1rem; }
+    body.tv .guide-tools { display: none; }
+    body.tv .g-num button { display: none; }
+    body.tv :focus { outline: 4px solid #fff; outline-offset: 2px; }
+    body.tv .icon-btn.tvfocus { outline: 4px solid #fff; outline-offset: 3px; background: #7e22ce; }
+    body.tv .guide.z-cats .guide-cat.on { outline: 4px solid #fff; outline-offset: -4px; }
+    body.tv .guide.z-list .g-row.sel .g-info { outline: 4px solid #a855f7; outline-offset: 2px; }
+    body.tv .side-panel { font-size: 1.1rem; }
+    body.tv .seg button, body.tv .btn { font-size: 1.1rem; padding: .7rem 1.2rem; }
     @media (max-width: 900px) {
       .app-shell { flex-direction: column; }
       .sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; }
@@ -462,6 +488,13 @@
         <div class="side-panel" id="panelSettings" style="display:none">
           <h3><span>Settings</span><button class="close-x" onclick="closePanel()" aria-label="Close">×</button></h3>
           <div class="sp-section" style="border-top:0;padding-top:0">
+            <div class="sp-label">TV mode (big text, remote control)</div>
+            <div class="seg" id="setTvSeg">
+              <button data-t="1" onclick="NioroTV.set(true);paintSettings()">On</button>
+              <button data-t="0" onclick="NioroTV.set(false);paintSettings()">Off</button>
+            </div>
+          </div>
+          <div class="sp-section">
             <div class="sp-label">Home view</div>
             <div class="seg" id="setViewSeg">
               <button data-v="guide" onclick="setHomeView('guide')">Guide</button>
@@ -1420,6 +1453,7 @@ jobs:
       document.querySelectorAll("#setLangSeg button").forEach(b => b.classList.toggle("on", b.dataset.l === l));
       document.querySelectorAll("#setAppSeg button").forEach(b => b.classList.toggle("on", (b.dataset.a === "1") === showApp));
       document.querySelectorAll("#setViewSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === homeView));
+      document.querySelectorAll("#setTvSeg button").forEach(b => b.classList.toggle("on", !!(window.NioroTV && NioroTV.isOn()) === (b.dataset.t === "1")));
     }
     function paintProfile() {
       const name = (viewerCtx && viewerCtx.name) || "Viewer";
@@ -1463,5 +1497,6 @@ jobs:
       }
     });
   </script>
+  <script src="tv.js"></script>
 </body>
 </html>

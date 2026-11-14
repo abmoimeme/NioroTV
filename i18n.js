@@ -37,6 +37,9 @@
   add("No channels found.", "Aucune chaîne trouvée.", "Nessun canale trovato.");
   add("Settings", "Paramètres", "Impostazioni");
   add("Profile", "Profil", "Profilo");
+  add("TV mode (big text, remote control)", "Mode TV (grand texte, télécommande)", "Modalità TV (testo grande, telecomando)");
+  add("On", "Activé", "Attivo");
+  add("Off", "Désactivé", "Disattivo");
   add("Home view", "Affichage d'accueil", "Vista Home");
   add("Language", "Langue", "Lingua");
   add("Playlist", "Playlist", "Playlist");
