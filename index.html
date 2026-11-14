@@ -492,6 +492,12 @@
             </div>
           </div>
           <div class="sp-section">
+            <div class="sp-label">Full lineup in Smarters Player Lite</div>
+            <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:.6rem">Every channel, including the ones that can't play in the browser. In Smarters choose "Load your Playlist or File/URL" and paste this link.</p>
+            <input id="plUrl" readonly style="width:100%;background:var(--roku-bg);border:1px solid var(--border);color:#fff;padding:.5rem .7rem;border-radius:8px;font-size:.8rem;margin-bottom:.5rem" />
+            <button class="btn btn-secondary" id="plCopy" onclick="copyPlaylistUrl()">📋 Copy playlist link</button>
+          </div>
+          <div class="sp-section">
             <div class="sp-label">Playlist</div>
             <button class="btn btn-secondary" onclick="downloadM3U()">⬇ Download playlist.m3u</button>
           </div>
@@ -1400,7 +1406,15 @@ jobs:
       if (which === "settings") paintSettings(); else paintProfile();
     }
     function closePanel() { document.getElementById("panelOverlay").classList.remove("open"); }
+    function copyPlaylistUrl() {
+      const el = document.getElementById("plUrl"), btn = document.getElementById("plCopy");
+      el.select();
+      const done = () => { btn.textContent = NioroLang.t("Copied!"); setTimeout(() => { btn.textContent = NioroLang.t("📋 Copy playlist link"); }, 1500); };
+      const legacy = () => { try { document.execCommand("copy"); } catch (e) {} done(); };
+      if (navigator.clipboard) navigator.clipboard.writeText(el.value).then(done, legacy); else legacy();
+    }
     function paintSettings() {
+      document.getElementById("plUrl").value = new URL("playlist.m3u", location.href).href;
       paintCountries();
       const l = (window.NioroLang && NioroLang.get && NioroLang.get()) || "en";
       document.querySelectorAll("#setLangSeg button").forEach(b => b.classList.toggle("on", b.dataset.l === l));

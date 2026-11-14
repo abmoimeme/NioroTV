@@ -77,6 +77,10 @@
   add("Hide", "Masquer", "Nascondi");
   add("Show", "Afficher", "Mostra");
   add("SMARTERS", "SMARTERS", "SMARTERS");
+  add("Full lineup in Smarters Player Lite", "Toute l'offre dans Smarters Player Lite", "Tutti i canali in Smarters Player Lite");
+  add("Every channel, including the ones that can't play in the browser. In Smarters choose \"Load your Playlist or File/URL\" and paste this link.", "Toutes les chaînes, y compris celles qui ne se lisent pas dans le navigateur. Dans Smarters, choisissez « Charger votre playlist ou fichier/URL » et collez ce lien.", "Tutti i canali, compresi quelli che non si riproducono nel browser. In Smarters scegli \"Carica la tua playlist o file/URL\" e incolla questo link.");
+  add("📋 Copy playlist link", "📋 Copier le lien de la playlist", "📋 Copia il link della playlist");
+  add("Copied!", "Copié !", "Copiato!");
   // Player
   add("Select any channel below to start watching", "Choisissez une chaîne ci-dessous pour regarder", "Scegli un canale qui sotto per guardare");
   add("Supports live HLS (.m3u8) streams directly in your browser", "Lecture directe des flux HLS (.m3u8) dans votre navigateur", "Riproduce flussi HLS (.m3u8) direttamente nel browser");
