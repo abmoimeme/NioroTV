@@ -165,5 +165,153 @@
       "allow_unknown_country": true
     }
   },
-  "upgrade_https": true
+  "upgrade_https": true,
+  "clean_names": true,
+  "featured": [
+    "=Africa 24",
+    "=France 24",
+    "TV5Monde Info",
+    "=Africanews French",
+    "=Africanews English",
+    "BBC News Africa",
+    "Euronews French",
+    "Africa 24 Sport",
+    "Makkah TV",
+    "Al Quran Al Kareem",
+    "Al Sunnah Al Nabawiyah",
+    "Iqraa Quran",
+    "=Iqra TV",
+    "Islam Channel",
+    "Huda TV",
+    "Trace Mziki"
+  ],
+  "playlist_order": [
+    "Featured",
+    "Senegal",
+    "Islamic",
+    "Sports",
+    "News",
+    "Movies",
+    "Kids",
+    "Music",
+    "Documentary",
+    "Gambia",
+    "Guinea",
+    "Guinea-Bissau",
+    "Mali",
+    "Mauritania",
+    "Cape Verde",
+    "Cote d'Ivoire",
+    "Burkina Faso",
+    "Benin",
+    "Togo",
+    "Ghana",
+    "Niger",
+    "Nigeria",
+    "Liberia",
+    "Sierra Leone",
+    "France",
+    "Italy",
+    "United Kingdom",
+    "United States",
+    "Series",
+    "Comedy",
+    "Entertainment",
+    "Culture",
+    "Education",
+    "Family",
+    "In French",
+    "In English"
+  ],
+  "extra_playlists": [
+    {
+      "file": "sn.m3u",
+      "groups": [
+        "Senegal"
+      ]
+    },
+    {
+      "file": "africa.m3u",
+      "groups": [
+        "Senegal",
+        "Gambia",
+        "Guinea",
+        "Guinea-Bissau",
+        "Mali",
+        "Mauritania",
+        "Cape Verde",
+        "Cote d'Ivoire",
+        "Burkina Faso",
+        "Benin",
+        "Togo",
+        "Ghana",
+        "Niger",
+        "Nigeria",
+        "Liberia",
+        "Sierra Leone"
+      ]
+    },
+    {
+      "file": "islam.m3u",
+      "groups": [
+        "Islamic"
+      ]
+    },
+    {
+      "file": "sport.m3u",
+      "groups": [
+        "Sports"
+      ]
+    },
+    {
+      "file": "lite.m3u",
+      "https_only": true,
+      "exclude_groups": [
+        "In French",
+        "In English",
+        "United States"
+      ]
+    }
+  ],
+  "hide_geo_blocked": true,
+  "dedupe_names": true,
+  "keep_geo_blocked_groups": [
+    "Senegal",
+    "Gambia",
+    "Guinea",
+    "Guinea-Bissau",
+    "Mali",
+    "Mauritania",
+    "Cape Verde",
+    "Cote d'Ivoire",
+    "Burkina Faso",
+    "Benin",
+    "Togo",
+    "Ghana",
+    "Niger",
+    "Nigeria",
+    "Liberia",
+    "Sierra Leone",
+    "Islamic"
+  ],
+  "extra_sources": [
+    {
+      "url": "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8",
+      "group_map": {
+        "Italy": "Italy",
+        "UK": "United Kingdom",
+        "France": "France",
+        "USA": "United States",
+        "Nigeria": "Nigeria",
+        "VOD Movies (EN)": "Movies",
+        "Documentaries (EN)": "Documentary",
+        "Music (EN)": "Music",
+        "News": "News"
+      },
+      "keyword_groups": {
+        "Saudi Arabia": "Islamic",
+        "Qatar": "Islamic"
+      }
+    }
+  ]
 }
