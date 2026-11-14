@@ -1,0 +1,14 @@
+{
+  "salt": "3645729c0d6be314899eef188561abed",
+  "codes": [
+    {
+      "name": "AB",
+      "h": "b49ab1b7bd2c9f100f247c50447c9b91222a03fc9a44f0c3ba88559f64491b15",
+      "admin": true
+    },
+    {
+      "name": "Test Viewer",
+      "h": "6eb4437b0262e316ae422fb8d406a45181d642f8c1146353c47e3325387ad898"
+    }
+  ]
+}

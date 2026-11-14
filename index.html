@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NioroTV — Live TV &amp; Smarters M3U Studio</title>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="analytics.js"></script>
   <style>
     :root {
       --roku-bg: #0c041a;
@@ -366,6 +370,7 @@
       </div>
       <button class="nav-btn active" data-view="home" onclick="switchView('home', this)">🏠 Home & Live TV</button>
       <button class="nav-btn" data-view="search" onclick="switchView('search', this)">🔍 Search</button>
+      <button class="nav-btn" data-view="request" onclick="switchView('request', this)">💬 Request</button>
       <button class="nav-btn" data-view="store" onclick="switchView('store', this)">🛍️ Channel Store</button>
       <button class="nav-btn" data-view="sync" onclick="switchView('sync', this)">☁️ Smarters GitHub Sync</button>
 
@@ -384,6 +389,7 @@
         </div>
         <div style="display:flex; gap:0.65rem; align-items:center;">
           <button class="btn btn-secondary" onclick="downloadM3U()">⬇ Download playlist.m3u</button>
+          <button class="btn btn-secondary" onclick="viewerCtx && viewerCtx.signOut()">Lock</button>
           <div class="clock-pill" id="clockDisplay">--:--</div>
         </div>
       </div>
@@ -427,6 +433,19 @@
           <div>
             <div style="margin-bottom:0.75rem; color:var(--text-muted);" id="searchCount">Showing all channels</div>
             <div class="results-grid" id="searchResultsGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: REQUESTS -->
+      <section id="view-request" class="view-section">
+        <div class="panel-card" style="max-width:640px;">
+          <strong>Tell us what you want to watch</strong>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin:0.35rem 0 0.75rem;">Missing a channel, a country or a feature? Send a request and the NioroTV team will see it.</p>
+          <textarea id="requestText" maxlength="500" rows="4" placeholder="e.g. Add more Senegalese channels, a Wolof news channel..." style="width:100%;background:var(--roku-bg);border:1px solid var(--border);color:#fff;padding:0.7rem;border-radius:8px;font-size:0.95rem;font-family:inherit;"></textarea>
+          <div style="display:flex; gap:0.6rem; align-items:center; margin-top:0.6rem;">
+            <button class="btn" onclick="sendRequest()">Send request</button>
+            <span id="requestStatus" style="font-size:0.85rem; color:var(--roku-accent);"></span>
           </div>
         </div>
       </section>
@@ -534,6 +553,7 @@
     </div>
   </div>
 
+  <script src="auth.js"></script>
   <script>
     const BASE_IPTV = "https://iptv-org.github.io/iptv";
     const PRESETS = {
@@ -582,6 +602,7 @@
       const titles = {
         home: "Home — Live Channels",
         search: "Search",
+        request: "Request a Channel",
         store: "Channel Store — Lineup Builder",
         sync: "Smarters Player Lite — GitHub Auto-Sync"
       };
@@ -708,6 +729,7 @@
 
     function playChannel(ch) {
       currentChannel = ch;
+      if (window.NioroTrack) NioroTrack.play(ch);
       const video = document.getElementById("hlsVideo");
       const status = document.getElementById("playerStatus");
       document.getElementById("nowPlayingTitle").textContent = ch.name;
@@ -756,7 +778,7 @@
     function toggleFavUrl(url) {
       const idx = favorites.indexOf(url);
       if (idx > -1) favorites.splice(idx, 1);
-      else favorites.push(url);
+      else { favorites.push(url); if (window.NioroTrack) NioroTrack.fav(allChannels.find(c => c.url === url)); }
       localStorage.setItem("roku_iptv_favs", JSON.stringify(favorites));
       updateHeroFavButton();
       renderSwimlanes();
@@ -834,6 +856,7 @@
       const q = document.getElementById("searchInput").value.trim().toLowerCase();
       const filtered = q ? allChannels.filter(c => c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)) : allChannels.slice(0, 60);
       document.getElementById("searchCount").textContent = `Showing ${filtered.length} matching channels`;
+      if (q && window.NioroTrack) NioroTrack.search(q, filtered.length);
       const grid = document.getElementById("searchResultsGrid");
       grid.innerHTML = "";
       filtered.slice(0, 80).forEach(ch => {
@@ -1019,7 +1042,28 @@ jobs:
     initKeypad();
     renderStore();
     updateSyncFiles();
-    rebuildLineup();
+    // Access-code gate: the lineup loads only after a valid code is entered.
+    let viewerCtx = null, lineupStarted = false;
+    function sendRequest() {
+      const box = document.getElementById("requestText"), st = document.getElementById("requestStatus");
+      const text = box.value.trim();
+      if (text.length < 3) { st.textContent = "Please write a few words."; return; }
+      if (window.NioroTrack && NioroTrack.enabled && NioroTrack.request(text)) { box.value = ""; st.textContent = "Thank you! Your request was sent."; }
+      else st.textContent = "Requests are not available right now.";
+    }
+    NioroAuth.init({
+      onReady(ctx) {
+        viewerCtx = ctx;
+        if (window.NioroTrack) {
+          NioroTrack.init(ctx);
+          const vEl = document.getElementById("hlsVideo");
+          vEl.addEventListener("playing", () => NioroTrack.playing());
+          ["pause", "ended", "error", "waiting"].forEach(e => vEl.addEventListener(e, () => NioroTrack.paused()));
+        }
+        if (!ctx.isAdmin) document.querySelector('[data-view="sync"]').style.display = "none";
+        if (!lineupStarted) { lineupStarted = true; rebuildLineup(); }
+      }
+    });
   </script>
 </body>
 </html>

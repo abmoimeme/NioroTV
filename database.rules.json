@@ -1,0 +1,60 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "viewers": {
+      ".read": "auth != null && auth.token.email == 'YOUR_GOOGLE_EMAIL' && auth.token.email_verified == true",
+      "$vid": {
+        ".write": true,
+        "name": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "device": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "lastSeen": { ".validate": "newData.isNumber()" },
+        "visits": { ".validate": "newData.isNumber()" },
+        "watchSecs": { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "presence": {
+      ".read": "auth != null && auth.token.email == 'YOUR_GOOGLE_EMAIL' && auth.token.email_verified == true",
+      "$vid": {
+        ".write": true,
+        "name": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "since": { ".validate": "newData.isNumber()" },
+        "ch": { ".validate": "newData.isString() && newData.val().length <= 120" },
+        "g": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "$other": { ".validate": false }
+      }
+    },
+    "events": {
+      ".read": "auth != null && auth.token.email == 'YOUR_GOOGLE_EMAIL' && auth.token.email_verified == true",
+      ".indexOn": ["t"],
+      "$eid": {
+        ".write": "!data.exists()",
+        ".validate": "newData.hasChildren(['t','v','type'])",
+        "t": { ".validate": "newData.isNumber()" },
+        "v": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "n": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "type": { ".validate": "newData.val() == 'visit' || newData.val() == 'play' || newData.val() == 'watch' || newData.val() == 'search' || newData.val() == 'fav'" },
+        "ch": { ".validate": "newData.isString() && newData.val().length <= 120" },
+        "g": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "q": { ".validate": "newData.isString() && newData.val().length <= 80" },
+        "secs": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 86400" },
+        "res": { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "requests": {
+      ".read": "auth != null && auth.token.email == 'YOUR_GOOGLE_EMAIL' && auth.token.email_verified == true",
+      ".indexOn": ["t"],
+      "$rid": {
+        ".write": "!data.exists() || (auth != null && auth.token.email == 'YOUR_GOOGLE_EMAIL' && auth.token.email_verified == true)",
+        "t": { ".validate": "newData.isNumber()" },
+        "v": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "n": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "text": { ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 500" },
+        "status": { ".validate": "newData.val() == 'new' || newData.val() == 'done'" },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}

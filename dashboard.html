@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>NioroTV Dashboard</title>
+  <style>
+    :root{--bg:#0c041a;--surface:#180933;--card:#230f47;--glow:#a855f7;--accent:#c084fc;--muted:#a799c2;--border:#361c66;--ok:#4ade80;--warn:#fbbf24}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:radial-gradient(circle at top right,#260d54 0%,var(--bg) 60%);color:#f8fafc;min-height:100vh;padding:1.25rem}
+    h1{font-size:1.4rem} h2{font-size:1.02rem;color:#f3e8ff;margin-bottom:.6rem} .muted{color:var(--muted);font-size:.85rem}
+    .btn{background:linear-gradient(135deg,#7e22ce,#581c87);color:#fff;border:1px solid var(--glow);padding:.45rem .9rem;border-radius:8px;font-weight:600;cursor:pointer;font-size:.88rem}
+    .btn.sec{background:var(--surface);border-color:var(--border)} .btn.red{background:#7f1d1d;border-color:#ef4444}
+    .top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;margin-bottom:1.2rem}
+    .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-bottom:1.2rem}
+    .tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem}
+    .tile .n{font-size:1.7rem;font-weight:800;color:var(--accent)} .tile .l{font-size:.78rem;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1rem;margin-bottom:1rem}
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem;overflow:auto}
+    table{width:100%;border-collapse:collapse} th,td{text-align:left;padding:.45rem .5rem;border-bottom:1px solid var(--border);font-size:.86rem;vertical-align:top} th{color:var(--accent);font-weight:600}
+    .bar{display:flex;align-items:center;gap:.5rem;margin:.28rem 0;font-size:.84rem}
+    .bar .name{width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .bar .track{flex:1;background:var(--bg);border-radius:6px;height:14px;overflow:hidden}
+    .bar .fill{height:100%;background:linear-gradient(90deg,#7e22ce,#c084fc)} .bar .val{width:3.2rem;text-align:right;color:var(--muted)}
+    .hours{display:flex;align-items:flex-end;gap:3px;height:110px}
+    .hours div{flex:1;background:linear-gradient(180deg,#c084fc,#7e22ce);border-radius:3px 3px 0 0;min-height:2px}
+    .hlab{display:flex;gap:3px;font-size:.65rem;color:var(--muted)} .hlab span{flex:1;text-align:center}
+    .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:.4rem}
+    .tag{padding:.1rem .45rem;border-radius:999px;font-size:.72rem;font-weight:700} .tag.new{background:#713f12;color:#fde68a} .tag.done{background:#14532d;color:#bbf7d0}
+    .zero{color:var(--warn)} select{background:var(--surface);color:#fff;border:1px solid var(--border);border-radius:8px;padding:.4rem}
+    #login,#denied{max-width:380px;margin:12vh auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;text-align:center}
+    #app{display:none} .empty{color:var(--muted);font-size:.85rem;padding:.4rem 0}
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <div id="login"><h1>NioroTV Dashboard</h1><p class="muted" style="margin:.5rem 0 1rem">Private. Sign in with the admin Google account.</p><button class="btn" id="signin">Sign in with Google</button><p class="muted" id="loginMsg" style="margin-top:.8rem"></p></div>
+  <div id="denied" style="display:none"><h1>Not authorized</h1><p class="muted" style="margin:.5rem 0 1rem">This Google account can't open the dashboard.</p><button class="btn sec" onclick="firebase.auth().signOut()">Use another account</button></div>
+
+  <div id="app">
+    <div class="top">
+      <div><h1>NioroTV Dashboard</h1><div class="muted" id="who"></div></div>
+      <div style="display:flex;gap:.6rem;align-items:center">
+        <select id="range"><option value="1">Last 24 hours</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option></select>
+        <button class="btn sec" onclick="firebase.auth().signOut()">Sign out</button>
+      </div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <div class="grid">
+      <div class="panel"><h2>Watching now</h2><div id="now"></div></div>
+      <div class="panel"><h2>Activity by hour (plays, your local time)</h2><div class="hours" id="hours"></div><div class="hlab" id="hlab"></div></div>
+    </div>
+    <div class="grid">
+      <div class="panel"><h2>Top channels (plays)</h2><div id="topCh"></div></div>
+      <div class="panel"><h2>Top channels (watch time)</h2><div id="topChTime"></div></div>
+      <div class="panel"><h2>Top groups</h2><div id="topG"></div></div>
+    </div>
+    <div class="grid">
+      <div class="panel"><h2>What viewers search for</h2><div class="muted" style="margin-bottom:.4rem">Amber = no results: unmet demand.</div><div id="searches"></div></div>
+      <div class="panel"><h2>Requests</h2><div id="requests"></div></div>
+    </div>
+    <div class="panel"><h2>Viewers</h2><div id="viewers"></div></div>
+  </div>
+
+  <script>
+    const cfg = window.FIREBASE_CONFIG || {};
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const fmtDur = (s) => { s = Math.round(s || 0); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return h ? `${h}h ${m}m` : `${m}m`; };
+    const ago = (t) => { if (!t) return "—"; const m = Math.round((Date.now() - t) / 60000); if (m < 1) return "just now"; if (m < 60) return m + " min ago"; const h = Math.round(m / 60); return h < 48 ? h + " h ago" : Math.round(h / 24) + " d ago"; };
+
+    if (!cfg.apiKey || String(cfg.apiKey).startsWith("PASTE")) {
+      $("loginMsg").textContent = "Firebase isn't configured yet (firebase-config.js).";
+      $("signin").disabled = true;
+    } else {
+      firebase.initializeApp(cfg);
+      const auth = firebase.auth(), db = firebase.database();
+      let listeners = [], evStop = null, data = { viewers: {}, presence: {}, events: [], requests: {} };
+
+      $("signin").onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch((e) => ($("loginMsg").textContent = e.message));
+      $("range").onchange = () => { if (auth.currentUser) startEvents(); };
+
+      auth.onAuthStateChanged(async (user) => {
+        stopAll();
+        if (!user) { $("login").style.display = "block"; $("denied").style.display = "none"; $("app").style.display = "none"; return; }
+        try { await db.ref("viewers").limitToFirst(1).once("value"); }
+        catch (e) { $("login").style.display = "none"; $("denied").style.display = "block"; $("app").style.display = "none"; return; }
+        $("login").style.display = "none"; $("denied").style.display = "none"; $("app").style.display = "block";
+        $("who").textContent = "Signed in as " + user.email;
+        listen("viewers", (v) => { data.viewers = v || {}; render(); });
+        listen("presence", (v) => { data.presence = v || {}; render(); });
+        listen("requests", (v) => { data.requests = v || {}; render(); });
+        startEvents();
+      });
+
+      function listen(path, cb) { const r = db.ref(path); const f = r.on("value", (s) => cb(s.val())); listeners.push(() => r.off("value", f)); }
+      function startEvents() {
+        if (evStop) evStop();
+        const since = Date.now() - Number($("range").value) * 86400000;
+        const q = db.ref("events").orderByChild("t").startAt(since).limitToLast(8000);
+        const f = q.on("value", (s) => { const arr = []; s.forEach((c) => { arr.push(c.val()); }); data.events = arr; render(); });
+        evStop = () => q.off("value", f); listeners.push(evStop);
+      }
+      function stopAll() { listeners.forEach((f) => f()); listeners = []; evStop = null; data = { viewers: {}, presence: {}, events: [], requests: {} }; }
+
+      function top(map, n) { return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, n); }
+      function bars(el, rows, fmt) {
+        if (!rows.length) { el.innerHTML = '<div class="empty">No data yet.</div>'; return; }
+        const max = rows[0][1] || 1;
+        el.innerHTML = rows.map(([k, v]) => `<div class="bar"><div class="name" title="${esc(k)}">${esc(k)}</div><div class="track"><div class="fill" style="width:${Math.max(3, (v / max) * 100)}%"></div></div><div class="val">${fmt ? fmt(v) : v}</div></div>`).join("");
+      }
+
+      function render() {
+        const ev = data.events, plays = ev.filter((e) => e.type === "play"), watch = ev.filter((e) => e.type === "watch");
+        const secs = watch.reduce((a, e) => a + (e.secs || 0), 0);
+        const active = new Set(ev.map((e) => e.v)).size, presence = Object.entries(data.presence);
+        const reqNew = Object.values(data.requests).filter((r) => r.status === "new").length;
+        $("tiles").innerHTML = [
+          [Object.keys(data.viewers).length, "Registered viewers seen"], [active, "Active in range"], [presence.length, "Watching / online now"],
+          [plays.length, "Channel plays"], [fmtDur(secs), "Total watch time"], [reqNew, "New requests"]
+        ].map(([n, l]) => `<div class="tile"><div class="n">${esc(n)}</div><div class="l">${l}</div></div>`).join("");
+
+        $("now").innerHTML = presence.length ? `<table><tr><th>Viewer</th><th>Watching</th><th>Online since</th></tr>${presence.map(([, p]) => `<tr><td><span class="dot"></span>${esc(p.name)}</td><td>${p.ch ? esc(p.ch) + ' <span class="muted">(' + esc(p.g) + ")</span>" : '<span class="muted">browsing</span>'}</td><td>${ago(p.since)}</td></tr>`).join("")}</table>` : '<div class="empty">Nobody online.</div>';
+
+        const hrs = new Array(24).fill(0); plays.forEach((e) => hrs[new Date(e.t).getHours()]++);
+        const hm = Math.max(1, ...hrs);
+        $("hours").innerHTML = hrs.map((n, h) => `<div title="${h}:00 — ${n} plays" style="height:${Math.max(2, (n / hm) * 100)}%"></div>`).join("");
+        $("hlab").innerHTML = hrs.map((_, h) => `<span>${h % 3 === 0 ? h : ""}</span>`).join("");
+
+        const chPlays = {}, chSecs = {}, grp = {};
+        plays.forEach((e) => { chPlays[e.ch] = (chPlays[e.ch] || 0) + 1; grp[e.g] = (grp[e.g] || 0) + 1; });
+        watch.forEach((e) => { chSecs[e.ch] = (chSecs[e.ch] || 0) + (e.secs || 0); });
+        bars($("topCh"), top(chPlays, 10)); bars($("topChTime"), top(chSecs, 10), fmtDur); bars($("topG"), top(grp, 10));
+
+        const sq = {}; ev.filter((e) => e.type === "search").forEach((e) => { const o = sq[e.q] || (sq[e.q] = { n: 0, zero: 0 }); o.n++; if (!e.res) o.zero++; });
+        const sr = Object.entries(sq).sort((a, b) => b[1].n - a[1].n).slice(0, 15);
+        $("searches").innerHTML = sr.length ? `<table><tr><th>Search</th><th>Times</th></tr>${sr.map(([q, o]) => `<tr><td class="${o.zero ? "zero" : ""}">${esc(q)}${o.zero ? " ⚠" : ""}</td><td>${o.n}</td></tr>`).join("")}</table>` : '<div class="empty">No searches yet.</div>';
+
+        const rq = Object.entries(data.requests).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
+        $("requests").innerHTML = rq.length ? rq.map(([id, r]) => `<div style="border-bottom:1px solid var(--border);padding:.5rem 0"><div><span class="tag ${esc(r.status)}">${esc(r.status)}</span> <b>${esc(r.n)}</b> <span class="muted">${ago(r.t)}</span></div><div style="margin:.3rem 0">${esc(r.text)}</div><div>${r.status !== "done" ? `<button class="btn sec" data-act="done" data-id="${esc(id)}">Mark done</button> ` : ""}<button class="btn red" data-act="del" data-id="${esc(id)}">Delete</button></div></div>`).join("") : '<div class="empty">No requests yet.</div>';
+
+        const per = {};
+        ev.forEach((e) => { const o = per[e.v] || (per[e.v] = { plays: 0, secs: 0, ch: {} }); if (e.type === "play") { o.plays++; o.ch[e.ch] = (o.ch[e.ch] || 0) + 1; } if (e.type === "watch") o.secs += e.secs || 0; });
+        const vr = Object.entries(data.viewers).sort((a, b) => (b[1].lastSeen || 0) - (a[1].lastSeen || 0));
+        $("viewers").innerHTML = vr.length ? `<table><tr><th>Name</th><th>Device</th><th>Last seen</th><th>Visits</th><th>Total watch</th><th>Plays (range)</th><th>Watch (range)</th><th>Favorite channel</th></tr>${vr.map(([id, v]) => { const p = per[id] || { plays: 0, secs: 0, ch: {} }; const fav = top(p.ch, 1)[0]; return `<tr><td>${esc(v.name)}</td><td>${esc(v.device)}</td><td>${ago(v.lastSeen)}</td><td>${v.visits || 0}</td><td>${fmtDur(v.watchSecs)}</td><td>${p.plays}</td><td>${fmtDur(p.secs)}</td><td>${fav ? esc(fav[0]) : "—"}</td></tr>`; }).join("")}</table>` : '<div class="empty">No viewers yet.</div>';
+      }
+
+      $("requests").addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-id]"); if (!b) return;
+        const ref = db.ref("requests/" + b.dataset.id);
+        if (b.dataset.act === "done") ref.update({ status: "done" }); else ref.remove();
+      });
+    }
+  </script>
+</body>
+</html>
