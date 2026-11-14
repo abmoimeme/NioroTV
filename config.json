@@ -137,7 +137,32 @@
         "quranic",
         "coranique"
       ],
-      "any_country": true
+      "countries": [
+        "sn",
+        "gm",
+        "gn",
+        "gw",
+        "ml",
+        "mr",
+        "cv",
+        "ci",
+        "bf",
+        "bj",
+        "tg",
+        "gh",
+        "ne",
+        "ng",
+        "lr",
+        "sl",
+        "sa",
+        "eg",
+        "ma",
+        "fr",
+        "it",
+        "us",
+        "uk"
+      ],
+      "allow_unknown_country": true
     }
   }
 }

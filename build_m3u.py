@@ -104,7 +104,12 @@ def main():
                 # e.g. Religious: keep only channels whose name matches the keyword list
                 if rule.get("include_keywords") and not matches_keywords(entry_name(extinf), rule["include_keywords"]):
                     continue
-                if not rule.get("any_country") and cat_countries and entry_country(extinf) not in cat_countries:
+                ctry = entry_country(extinf)
+                if rule.get("countries"):
+                    allowed = {x.lower() for x in rule["countries"]}
+                    if ctry not in allowed and not (ctry is None and rule.get("allow_unknown_country")):
+                        continue
+                elif not rule.get("any_country") and cat_countries and ctry not in cat_countries:
                     continue
             elif kind == "category" and cat_countries and entry_country(extinf) not in cat_countries:
                 continue
