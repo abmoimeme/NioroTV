@@ -23,6 +23,29 @@
   add("Free-to-air global streams powered by IPTV-org", "Flux mondiaux gratuits propulsés par IPTV-org", "Flussi globali gratuiti forniti da IPTV-org");
   add("⬇ Download playlist.m3u", "⬇ Télécharger playlist.m3u", "⬇ Scarica playlist.m3u");
   add("Lock", "Verrouiller", "Blocca");
+  // Guide, settings, profile
+  add("☰ Guide", "☰ Guide", "☰ Guida");
+  add("▦ Rows", "▦ Rangées", "▦ Righe");
+  add("Guide", "Guide", "Guida");
+  add("Rows", "Rangées", "Righe");
+  add("★ Favorites", "★ Favoris", "★ Preferiti");
+  add("Recently Watched", "Récemment regardées", "Guardati di recente");
+  add("All Channels", "Toutes les chaînes", "Tutti i canali");
+  add("Filter channels", "Filtrer les chaînes", "Filtra canali");
+  add("No favorites yet. Tap the star on any channel.", "Aucun favori. Touchez l'étoile d'une chaîne.", "Nessun preferito. Tocca la stella su un canale.");
+  add("Channels you watch will show up here.", "Les chaînes que vous regardez apparaîtront ici.", "I canali che guardi appariranno qui.");
+  add("No channels found.", "Aucune chaîne trouvée.", "Nessun canale trovato.");
+  add("Settings", "Paramètres", "Impostazioni");
+  add("Profile", "Profil", "Profilo");
+  add("Home view", "Affichage d'accueil", "Vista Home");
+  add("Language", "Langue", "Lingua");
+  add("Playlist", "Playlist", "Playlist");
+  add("Favorites", "Favoris", "Preferiti");
+  add("Recently watched", "Récemment regardées", "Guardati di recente");
+  add("Viewer", "Spectateur", "Spettatore");
+  add("Administrator", "Administrateur", "Amministratore");
+  add("Open admin dashboard", "Ouvrir le tableau de bord admin", "Apri la dashboard admin");
+  add("Lock / Sign out", "Verrouiller / Se déconnecter", "Blocca / Esci");
   // Player
   add("Select any channel below to start watching", "Choisissez une chaîne ci-dessous pour regarder", "Scegli un canale qui sotto per guardare");
   add("Supports live HLS (.m3u8) streams directly in your browser", "Lecture directe des flux HLS (.m3u8) dans votre navigateur", "Riproduce flussi HLS (.m3u8) direttamente nel browser");
@@ -70,6 +93,7 @@
   const P = [ // [regex, fr, it]
     [/^(\d+) Unique Channels Loaded$/, "$1 chaînes uniques chargées", "$1 canali unici caricati"],
     [/^Connecting to (.+)\.\.\.$/, "Connexion à $1...", "Connessione a $1..."],
+    [/^(\d+) channels$/, "$1 chaînes", "$1 canali"],
     [/^Showing (\d+) matching channels$/, "$1 chaînes trouvées", "$1 canali trovati"],
     [/^⭐ My Favorites \((\d+)\)$/, "⭐ Mes favoris ($1)", "⭐ I miei preferiti ($1)"],
     [/^Country: (.+)$/, "Pays : $1", "Paese: $1"], [/^Language: (.+)$/, "Langue : $1", "Lingua: $1"], [/^Category: (.+)$/, "Catégorie : $1", "Categoria: $1"]

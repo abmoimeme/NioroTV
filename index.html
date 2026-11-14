@@ -92,7 +92,7 @@
     }
     .main-content {
       flex: 1;
-      padding: 1.5rem 2rem 4rem;
+      padding: 2rem 2rem 4rem;
       max-width: calc(100vw - 240px);
     }
     /* Top Bar */
@@ -358,6 +358,67 @@
       .main-content { max-width: 100%; }
       .hero-player, .search-layout { grid-template-columns: 1fr; }
     }
+
+    /* Header icons (search / settings / profile) */
+    .icon-btn { width: 42px; height: 42px; border-radius: 50%; background: rgba(54,28,102,.55); border: 1px solid var(--border); color: #fff; display: grid; place-items: center; cursor: pointer; transition: .15s; padding: 0; }
+    .icon-btn:hover, .icon-btn:focus-visible { background: #7e22ce; border-color: var(--roku-glow); box-shadow: 0 0 14px rgba(168,85,247,.5); outline: none; }
+    .icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .avatar-btn { background: linear-gradient(135deg, #a855f7, #6d28d9); border-color: #c084fc; font-weight: 800; font-size: 1rem; }
+    .avatar-btn svg { fill: currentColor; stroke: none; }
+    /* Panels (settings / profile) */
+    .panel-overlay { position: fixed; inset: 0; background: rgba(5,2,14,.65); z-index: 9000; display: none; justify-content: flex-end; }
+    .panel-overlay.open { display: flex; }
+    .side-panel { width: min(380px, 100%); height: 100%; background: #12072a; border-left: 1px solid var(--border); padding: 1.4rem 1.3rem; overflow-y: auto; box-shadow: -10px 0 40px rgba(0,0,0,.5); }
+    .side-panel h3 { font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .side-panel .close-x { background: none; border: 0; color: var(--text-muted); font-size: 1.6rem; cursor: pointer; line-height: 1; }
+    .sp-section { border-top: 1px solid var(--border); padding: 1rem 0; }
+    .sp-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: .55rem; }
+    .seg { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .seg button { background: var(--roku-surface); border: 1px solid var(--border); color: #fff; padding: .45rem .9rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: .85rem; }
+    .seg button.on { background: #7e22ce; border-color: var(--roku-glow); }
+    .profile-head { display: flex; align-items: center; gap: .9rem; margin-bottom: .5rem; }
+    .profile-head .big-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #6d28d9); display: grid; place-items: center; font-size: 1.5rem; font-weight: 800; }
+    .stat-row { display: flex; gap: .6rem; }
+    .stat-row div { flex: 1; background: var(--roku-surface); border: 1px solid var(--border); border-radius: 10px; padding: .6rem; text-align: center; }
+    .stat-row b { display: block; font-size: 1.2rem; }
+    .stat-row span { font-size: .72rem; color: var(--text-muted); }
+    /* View switch + Guide (Samsung TV Plus style) */
+    .view-switch { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1rem; flex-wrap: wrap; }
+    .view-switch .seg button { display: inline-flex; align-items: center; gap: .4rem; }
+    .guide { display: none; grid-template-columns: 230px 1fr; gap: 1.2rem; background: rgba(14,5,31,.7); border: 1px solid var(--border); border-radius: 16px; padding: 1rem; height: min(62vh, 640px); min-height: 360px; }
+    .guide.show { display: grid; }
+    .guide-cats { overflow-y: auto; display: flex; flex-direction: column; gap: .15rem; padding-right: .3rem; }
+    .guide-cat { text-align: left; background: none; border: 0; color: #d9ccf0; padding: .7rem .9rem; border-radius: 10px; font-size: .98rem; cursor: pointer; }
+    .guide-cat:hover { background: rgba(126,34,206,.25); }
+    .guide-cat.on { background: #ede9fe; color: #2e1065; font-weight: 700; }
+    .guide-cat .n { float: right; font-size: .75rem; opacity: .65; }
+    .guide-cat.sep { border-bottom: 1px solid var(--border); border-radius: 0; margin-bottom: .4rem; padding-bottom: .9rem; }
+    .guide-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+    .guide-tools { display: flex; align-items: center; gap: .8rem; margin-bottom: .7rem; }
+    .guide-tools input { flex: 1; background: var(--roku-surface); border: 1px solid var(--border); color: #fff; padding: .55rem .9rem; border-radius: 999px; font-size: .9rem; outline: none; }
+    .guide-tools input:focus { border-color: var(--roku-glow); }
+    .guide-tools .count { color: var(--text-muted); font-size: .8rem; white-space: nowrap; }
+    .guide-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: .5rem; padding-right: .3rem; }
+    .g-row { display: grid; grid-template-columns: 62px 78px 1fr; align-items: center; gap: .8rem; cursor: pointer; }
+    .g-num { text-align: center; color: var(--text-muted); font-size: .95rem; line-height: 1.1; }
+    .g-num button { display: block; margin: .15rem auto 0; background: none; border: 0; color: #cbbfe6; font-size: 1.15rem; cursor: pointer; padding: 0; }
+    .g-num button.on { color: #facc15; }
+    .g-logo { position: relative; width: 78px; height: 78px; border-radius: 14px; background: #1c0e3d; border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; }
+    .g-logo img { max-width: 86%; max-height: 86%; object-fit: contain; }
+    .g-logo .tv { font-weight: 800; color: #a855f7; }
+    .g-now { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; background: #e11d48; display: none; align-items: center; justify-content: center; gap: 2px; }
+    .g-now i { display: block; width: 2px; background: #fff; border-radius: 1px; animation: gbar 1s ease-in-out infinite; }
+    .g-now i:nth-child(1) { height: 5px; } .g-now i:nth-child(2) { height: 10px; animation-delay: .2s; } .g-now i:nth-child(3) { height: 6px; animation-delay: .4s; }
+    @keyframes gbar { 50% { transform: scaleY(.45); } }
+    .g-row.playing .g-now { display: flex; }
+    .g-info { background: rgba(80,68,120,.45); border: 1px solid transparent; border-radius: 14px; padding: .85rem 1.1rem; min-width: 0; transition: .12s; display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+    .g-row:hover .g-info { background: rgba(110,92,170,.6); }
+    .g-row.sel .g-info, .g-row.playing .g-info { background: #ede9fe; color: #2e1065; border-color: #fff; }
+    .g-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1.02rem; }
+    .g-group { font-size: .78rem; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .g-badge { font-size: .68rem; font-weight: 800; letter-spacing: .06em; padding: .15rem .5rem; border-radius: 6px; background: #e11d48; color: #fff; white-space: nowrap; }
+    .guide-empty { color: var(--text-muted); padding: 2rem 1rem; text-align: center; }
+    @media (max-width: 760px) { .guide { grid-template-columns: 1fr; height: auto; } .guide-cats { flex-direction: row; overflow-x: auto; } .guide-cat { white-space: nowrap; } .guide-list { max-height: 55vh; } .g-row { grid-template-columns: 44px 56px 1fr; } .g-logo { width: 56px; height: 56px; } }
   </style>
 </head>
 <body>
@@ -388,9 +449,55 @@
           <span style="font-size:0.85rem; color:var(--text-muted);">Free-to-air global streams powered by IPTV-org</span>
         </div>
         <div style="display:flex; gap:0.65rem; align-items:center;">
-          <button class="btn btn-secondary" onclick="downloadM3U()">⬇ Download playlist.m3u</button>
-          <button class="btn btn-secondary" onclick="viewerCtx && viewerCtx.signOut()">Lock</button>
           <div class="clock-pill" id="clockDisplay">--:--</div>
+          <button class="icon-btn" title="Search" aria-label="Search" onclick="switchView('search', document.querySelector('[data-view=search]'))"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+          <button class="icon-btn" title="Settings" aria-label="Settings" onclick="openPanel('settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+          <button class="icon-btn avatar-btn" id="profileBtn" title="Profile" aria-label="Profile" onclick="openPanel('profile')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2"/><path d="M3.8 21c.6-4.4 4-6.6 8.2-6.6s7.6 2.2 8.2 6.6z"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Settings / Profile panels -->
+      <div class="panel-overlay" id="panelOverlay" onclick="if(event.target===this)closePanel()">
+        <div class="side-panel" id="panelSettings" style="display:none">
+          <h3><span>Settings</span><button class="close-x" onclick="closePanel()" aria-label="Close">×</button></h3>
+          <div class="sp-section" style="border-top:0;padding-top:0">
+            <div class="sp-label">Home view</div>
+            <div class="seg" id="setViewSeg">
+              <button data-v="guide" onclick="setHomeView('guide')">Guide</button>
+              <button data-v="rows" onclick="setHomeView('rows')">Rows</button>
+            </div>
+          </div>
+          <div class="sp-section">
+            <div class="sp-label">Language</div>
+            <div class="seg" id="setLangSeg">
+              <button data-l="en" onclick="NioroLang.set('en');paintSettings()">English</button>
+              <button data-l="fr" onclick="NioroLang.set('fr');paintSettings()">Français</button>
+              <button data-l="it" onclick="NioroLang.set('it');paintSettings()">Italiano</button>
+            </div>
+          </div>
+          <div class="sp-section">
+            <div class="sp-label">Playlist</div>
+            <button class="btn btn-secondary" onclick="downloadM3U()">⬇ Download playlist.m3u</button>
+          </div>
+        </div>
+        <div class="side-panel" id="panelProfile" style="display:none">
+          <h3><span>Profile</span><button class="close-x" onclick="closePanel()" aria-label="Close">×</button></h3>
+          <div class="profile-head">
+            <div class="big-avatar" id="profInitial">?</div>
+            <div><div id="profName" style="font-weight:700;font-size:1.1rem;">Viewer</div><div id="profRole" style="color:var(--text-muted);font-size:.85rem;">Viewer</div></div>
+          </div>
+          <div class="sp-section">
+            <div class="stat-row">
+              <div><b id="profFavs">0</b><span>Favorites</span></div>
+              <div><b id="profRecent">0</b><span>Recently watched</span></div>
+            </div>
+          </div>
+          <div class="sp-section" id="profAdmin" style="display:none">
+            <a class="btn" href="dashboard.html" style="text-decoration:none;display:inline-block">Open admin dashboard</a>
+          </div>
+          <div class="sp-section">
+            <button class="btn btn-secondary" onclick="closePanel();viewerCtx && viewerCtx.signOut()">Lock / Sign out</button>
+          </div>
         </div>
       </div>
 
@@ -413,6 +520,24 @@
               <button class="btn btn-secondary" id="heroFavBtn" onclick="toggleCurrentFavorite()">☆ Add to Favorites</button>
               <button class="btn btn-secondary" onclick="copyCurrentStreamUrl()">📋 Copy Stream URL</button>
             </div>
+          </div>
+        </div>
+
+        <div class="view-switch">
+          <div class="seg" id="viewSeg">
+            <button data-v="guide" onclick="setHomeView('guide')">☰ Guide</button>
+            <button data-v="rows" onclick="setHomeView('rows')">▦ Rows</button>
+          </div>
+        </div>
+
+        <div class="guide" id="guideView">
+          <nav class="guide-cats" id="guideCats"></nav>
+          <div class="guide-main">
+            <div class="guide-tools">
+              <input id="guideFilter" type="search" placeholder="Filter channels" oninput="renderGuide()" />
+              <span class="count" id="guideCount"></span>
+            </div>
+            <div class="guide-list" id="guideList"></div>
           </div>
         </div>
 
@@ -668,6 +793,7 @@
       allChannels = merged;
       document.getElementById("channelStats").textContent = `${allChannels.length} Unique Channels Loaded`;
       renderSwimlanes();
+      renderGuide();
       updateSyncFiles();
     }
 
@@ -730,6 +856,8 @@
 
     function playChannel(ch) {
       currentChannel = ch;
+      noteRecent(ch);
+      markGuide();
       if (window.NioroTrack) NioroTrack.play(ch);
       const video = document.getElementById("hlsVideo");
       const status = document.getElementById("playerStatus");
@@ -785,6 +913,7 @@
       localStorage.setItem("roku_iptv_favs", JSON.stringify(favorites));
       updateHeroFavButton();
       renderSwimlanes();
+      renderGuide();
     }
 
     function toggleCurrentFavorite() {
@@ -1009,6 +1138,10 @@ jobs:
     }
 
     function moveFocus(dir) {
+      if (homeView === "guide" && document.getElementById("view-home").classList.contains("active")) {
+        if (dir === "down") guideMove(1); if (dir === "up") guideMove(-1);
+        return;
+      }
       const rows = document.querySelectorAll(".swimlane-row");
       if (!rows.length) return;
       if (dir === "down") focusRow = Math.min(rows.length - 1, focusRow + 1);
@@ -1021,6 +1154,9 @@ jobs:
     }
 
     function activateFocused() {
+      if (homeView === "guide" && document.getElementById("view-home").classList.contains("active")) {
+        const el = document.querySelector("#guideList .g-row.sel"); if (el) el.click(); return;
+      }
       const target = document.querySelector(`.channel-tile[data-row="${focusRow}"][data-col="${focusCol}"]`);
       if (target) target.click();
     }
@@ -1041,6 +1177,148 @@ jobs:
       if (e.key === "Enter") { e.preventDefault(); activateFocused(); }
     });
 
+
+    // ---------- Guide view (Samsung TV Plus style) ----------
+    const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+    let homeView = LS.get("nioro_homeview", "guide");
+    let guideCat = "all", guideLimit = 120, guideSel = 0, guideRows = [];
+    let recent = (() => { try { return JSON.parse(LS.get("nioro_recent", "[]")); } catch (e) { return []; } })();
+
+    function chNumber(ch) { return allChannels.indexOf(ch) + 1; }
+    function guideChannels() {
+      let list;
+      if (guideCat === "fav") list = allChannels.filter(c => favorites.includes(c.url));
+      else if (guideCat === "recent") list = recent.map(u => allChannels.find(c => c.url === u)).filter(Boolean);
+      else if (guideCat === "all") list = allChannels;
+      else list = allChannels.filter(c => c.group === guideCat);
+      const q = (document.getElementById("guideFilter").value || "").trim().toLowerCase();
+      return q ? list.filter(c => c.name.toLowerCase().includes(q)) : list;
+    }
+    function renderGuideCats() {
+      const box = document.getElementById("guideCats");
+      const counts = {};
+      allChannels.forEach(c => counts[c.group] = (counts[c.group] || 0) + 1);
+      const cats = [
+        { id: "fav", label: "★ Favorites", n: favorites.filter(u => allChannels.some(c => c.url === u)).length, sep: false },
+        { id: "recent", label: "Recently Watched", n: recent.filter(u => allChannels.some(c => c.url === u)).length, sep: true },
+        { id: "all", label: "All Channels", n: allChannels.length },
+        ...Object.keys(counts).map(g => ({ id: g, label: g, n: counts[g] }))
+      ];
+      box.innerHTML = "";
+      cats.forEach(c => {
+        const b = document.createElement("button");
+        b.className = "guide-cat" + (c.sep ? " sep" : "") + (guideCat === c.id ? " on" : "");
+        const n = document.createElement("span"); n.className = "n"; n.textContent = c.n;
+        b.append(document.createTextNode(c.label), n);
+        b.onclick = () => { guideCat = c.id; guideLimit = 120; guideSel = 0; document.getElementById("guideList").scrollTop = 0; renderGuide(); };
+        box.appendChild(b);
+      });
+    }
+    function guideRow(ch) {
+      const row = document.createElement("div");
+      row.className = "g-row";
+      row.dataset.url = ch.url;
+      const isFav = favorites.includes(ch.url);
+      const num = document.createElement("div"); num.className = "g-num";
+      num.append(document.createTextNode(chNumber(ch)));
+      const star = document.createElement("button"); star.className = isFav ? "on" : ""; star.textContent = isFav ? "★" : "☆"; star.setAttribute("aria-label", "Favorite");
+      star.onclick = (e) => { e.stopPropagation(); toggleFavUrl(ch.url); };
+      num.appendChild(star);
+      const logo = document.createElement("div"); logo.className = "g-logo";
+      if (ch.logo) { const im = document.createElement("img"); im.alt = ""; im.src = ch.logo; im.onerror = () => { im.remove(); const t = document.createElement("span"); t.className = "tv"; t.textContent = "TV"; logo.prepend(t); }; logo.appendChild(im); }
+      else { const t = document.createElement("span"); t.className = "tv"; t.textContent = "TV"; logo.appendChild(t); }
+      const now = document.createElement("div"); now.className = "g-now"; now.innerHTML = "<i></i><i></i><i></i>"; logo.appendChild(now);
+      const info = document.createElement("div"); info.className = "g-info";
+      const txt = document.createElement("div"); txt.style.minWidth = 0;
+      const nm = document.createElement("div"); nm.className = "g-name"; nm.textContent = ch.name; nm.title = ch.name;
+      const gp = document.createElement("div"); gp.className = "g-group"; gp.textContent = ch.group;
+      txt.append(nm, gp);
+      const badge = document.createElement("span"); badge.className = "g-badge"; badge.textContent = "LIVE";
+      info.append(txt, badge);
+      row.append(num, logo, info);
+      row.onclick = () => {
+        guideSel = guideRows.indexOf(ch);
+        if (currentChannel && currentChannel.url === ch.url) enterTheaterFullscreen(); else playChannel(ch);
+        markGuide();
+      };
+      return row;
+    }
+    let guideShown = [];
+    function renderGuide() {
+      const view = document.getElementById("guideView");
+      if (!view) return;
+      renderGuideCats();
+      const list = document.getElementById("guideList");
+      const keep = list.scrollTop;
+      guideRows = guideChannels();
+      list.innerHTML = "";
+      if (!guideRows.length) {
+        const e = document.createElement("div"); e.className = "guide-empty";
+        e.textContent = guideCat === "fav" ? "No favorites yet. Tap the star on any channel." : guideCat === "recent" ? "Channels you watch will show up here." : "No channels found.";
+        list.appendChild(e);
+      } else guideRows.slice(0, guideLimit).forEach(ch => list.appendChild(guideRow(ch)));
+      document.getElementById("guideCount").textContent = guideRows.length + " channels";
+      list.scrollTop = keep;
+      markGuide();
+    }
+    function markGuide() {
+      document.querySelectorAll("#guideList .g-row").forEach(r => {
+        const u = r.dataset.url;
+        r.classList.toggle("playing", !!currentChannel && currentChannel.url === u);
+        r.classList.toggle("sel", !!guideRows[guideSel] && guideRows[guideSel].url === u);
+      });
+    }
+    document.getElementById("guideList").addEventListener("scroll", function () {
+      if (this.scrollTop + this.clientHeight > this.scrollHeight - 200 && guideLimit < guideRows.length) {
+        const from = guideLimit; guideLimit += 120;
+        guideRows.slice(from, guideLimit).forEach(ch => this.appendChild(guideRow(ch)));
+        markGuide();
+      }
+    });
+    function setHomeView(v) {
+      homeView = v; LS.set("nioro_homeview", v);
+      document.getElementById("guideView").classList.toggle("show", v === "guide");
+      document.getElementById("swimlanesContainer").style.display = v === "rows" ? "" : "none";
+      document.querySelectorAll("#viewSeg button, #setViewSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
+      if (v === "guide") renderGuide();
+    }
+    function guideMove(d) {
+      if (!guideRows.length) return;
+      guideSel = Math.max(0, Math.min(guideRows.length - 1, guideSel + d));
+      while (guideSel >= guideLimit - 1 && guideLimit < guideRows.length) { const list = document.getElementById("guideList"); const from = guideLimit; guideLimit += 120; guideRows.slice(from, guideLimit).forEach(ch => list.appendChild(guideRow(ch))); }
+      markGuide();
+      const el = document.querySelector("#guideList .g-row.sel"); if (el) el.scrollIntoView({ block: "nearest" });
+    }
+    function noteRecent(ch) {
+      recent = [ch.url, ...recent.filter(u => u !== ch.url)].slice(0, 20);
+      LS.set("nioro_recent", JSON.stringify(recent));
+    }
+
+    // ---------- Settings / Profile panels ----------
+    function openPanel(which) {
+      document.getElementById("panelSettings").style.display = which === "settings" ? "" : "none";
+      document.getElementById("panelProfile").style.display = which === "profile" ? "" : "none";
+      document.getElementById("panelOverlay").classList.add("open");
+      if (which === "settings") paintSettings(); else paintProfile();
+    }
+    function closePanel() { document.getElementById("panelOverlay").classList.remove("open"); }
+    function paintSettings() {
+      const l = (window.NioroLang && NioroLang.get && NioroLang.get()) || "en";
+      document.querySelectorAll("#setLangSeg button").forEach(b => b.classList.toggle("on", b.dataset.l === l));
+      document.querySelectorAll("#setViewSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === homeView));
+    }
+    function paintProfile() {
+      const name = (viewerCtx && viewerCtx.name) || "Viewer";
+      document.getElementById("profName").textContent = name;
+      document.getElementById("profInitial").textContent = name.trim().charAt(0).toUpperCase() || "?";
+      document.getElementById("profRole").textContent = viewerCtx && viewerCtx.isAdmin ? "Administrator" : "Viewer";
+      document.getElementById("profFavs").textContent = favorites.length;
+      document.getElementById("profRecent").textContent = recent.length;
+      document.getElementById("profAdmin").style.display = viewerCtx && viewerCtx.isAdmin ? "" : "none";
+    }
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closePanel(); });
+    setHomeView(homeView);
+
     // Init
     initKeypad();
     renderStore();
@@ -1057,6 +1335,7 @@ jobs:
     NioroAuth.init({
       onReady(ctx) {
         viewerCtx = ctx;
+        { const pb = document.getElementById('profileBtn'); const ch = (ctx.name || '').trim().charAt(0).toUpperCase(); if (ch) pb.innerHTML = ch; }
         if (window.NioroTrack) {
           NioroTrack.init(ctx);
           const vEl = document.getElementById("hlsVideo");
