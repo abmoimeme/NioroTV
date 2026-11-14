@@ -1,5 +1,5 @@
 {
-  "countries": ["sn", "us", "fr"],
+  "countries": ["sn", "gm", "gn", "gw", "ml", "mr", "cv", "ci", "bf", "bj", "tg", "gh", "ne", "ng", "lr", "sl", "us", "fr"],
   "languages": ["fra", "eng"],
   "categories": ["sports", "movies", "news"],
   "remove_duplicates": true,
