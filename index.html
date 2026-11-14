@@ -714,6 +714,7 @@
       languages: ["fra", "eng"],
       categories: ["sports", "movies", "documentary", "religious", "kids", "music", "news", "entertainment", "comedy", "series", "culture", "education", "family"],
       category_countries: ["sn", "fr", "it", "us", "uk"],
+      category_rules: { religious: { any_country: true, include_keywords: ["quran", "quraan", "koran", "coran", "corano", "alquran", "makkah", "makka", "mecca", "madinah", "madina", "medina", "islam", "islamic", "islamique", "islamico", "islamiya", "iqra", "muslim", "musulman", "musulmana", "sunnah", "sunna", "dawah", "dawa", "huda", "hidaya", "hidayah", "peace tv", "mouride", "mourid", "murid", "mouridiyya", "touba", "tijani", "tidjane", "tidiane", "khassida", "xassida", "qasida", "lamp fall", "daara", "daaray", "mosque", "mosquee", "moschea", "masjid", "adhan", "azan", "ramadan", "ramadhan", "hajj", "hadj", "umrah", "omra", "salat", "sheikh", "cheikh", "shaykh", "ahlulbayt", "ahl al bayt", "ahlebayt", "kawthar", "alkawthar", "almajd", "al majd", "resalah", "risala", "rissala", "mourtada", "karbala", "najaf", "allah", "nabi", "prophet muhammad", "mohammed", "muhammad", "zikr", "dhikr", "nasheed", "anasheed", "tarbiya", "tarbiyah", "fatwa", "quranic", "coranique"] } },
       remove_duplicates: true,
       require_https: false
     };
@@ -790,6 +791,11 @@
 
       const seen = new Set();
       const catCountries = (config.category_countries || []).map(c => c.toLowerCase());
+      const normName = s => " " + String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim() + " ";
+      const rules = config.category_rules || {};
+      const kwCache = {};
+      const ruleFor = ch => ch.kind === "category" ? rules[ch.group.replace("Category: ", "").toLowerCase()] : null;
+      const kwMatch = (rule, name) => { const n = normName(name); const ks = kwCache[rule.include_keywords] || (kwCache[rule.include_keywords] = rule.include_keywords.map(normName)); return ks.some(k => n.includes(k)); };
       const results = await Promise.all(sources.map(async src => {
         try {
           const res = await fetch(src.url);
@@ -807,7 +813,11 @@
       const merged = [];
       for (const list of results) {
         for (const ch of list) {
-          if (ch.kind === "category" && catCountries.length && !catCountries.includes(ch.country)) continue;
+          const rule = ruleFor(ch);
+          if (rule) {
+            if (rule.include_keywords && !kwMatch(rule, ch.name)) continue;
+            if (!rule.any_country && catCountries.length && !catCountries.includes(ch.country)) continue;
+          } else if (ch.kind === "category" && catCountries.length && !catCountries.includes(ch.country)) continue;
           const key = ch.kind + "|" + ch.url;
           if (config.remove_duplicates && seen.has(key)) continue;
           seen.add(key);

@@ -1,5 +1,6 @@
 import json
 import re
+import unicodedata
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
@@ -51,6 +52,18 @@ def parse_entries(raw_text, folder_label):
         i += 1
     return entries
 
+def norm_name(s):
+    s = unicodedata.normalize("NFD", s.lower())
+    s = "".join(ch for ch in s if not unicodedata.combining(ch))
+    return " " + re.sub(r"[^a-z0-9]+", " ", s).strip() + " "
+
+def entry_name(extinf):
+    return extinf.rsplit(",", 1)[-1].strip()
+
+def matches_keywords(name, keywords):
+    n = norm_name(name)
+    return any(norm_name(k) in n for k in keywords)
+
 def entry_country(extinf):
     """Country code from tvg-id like 'TF1.fr@SD' -> 'fr' (None if absent)."""
     m = re.search(r'tvg-id="([^"]*)"', extinf)
@@ -79,12 +92,21 @@ def main():
     # Category lists are global; keep only the channels from these countries.
     cat_countries = {c.lower() for c in config.get("category_countries", [])}
 
+    rules = {k.lower(): v for k, v in config.get("category_rules", {}).items()}
+
     for url, label, kind in sources:
+        rule = rules.get(label.split(": ", 1)[1].lower()) if kind == "category" else None
         raw = fetch_m3u(url)
         for extinf, extra_tags, stream_url in parse_entries(raw, label):
             if config.get("require_https") and not stream_url.startswith("https://"):
                 continue
-            if kind == "category" and cat_countries and entry_country(extinf) not in cat_countries:
+            if rule:
+                # e.g. Religious: keep only channels whose name matches the keyword list
+                if rule.get("include_keywords") and not matches_keywords(entry_name(extinf), rule["include_keywords"]):
+                    continue
+                if not rule.get("any_country") and cat_countries and entry_country(extinf) not in cat_countries:
+                    continue
+            elif kind == "category" and cat_countries and entry_country(extinf) not in cat_countries:
                 continue
             if config.get("remove_duplicates", True):
                 # A channel appears once per kind (country / language / category),
