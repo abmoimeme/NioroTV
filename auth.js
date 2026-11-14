@@ -2,8 +2,8 @@
 (function () {
   const fr = (navigator.language || "en").toLowerCase().startsWith("fr");
   const T = fr
-    ? { t: "Accès NioroTV", s: "Entrez votre code d'accès personnel.", go: "Entrer", note: "Votre activité de visionnage est enregistrée pour améliorer NioroTV.", bad: "Code invalide.", err: "Impossible de vérifier le code. Réessayez." }
-    : { t: "NioroTV Access", s: "Enter your personal access code.", go: "Enter", note: "Your viewing activity is recorded to help improve NioroTV.", bad: "Invalid code.", err: "Could not verify the code. Try again." };
+    ? { t: "Accès NioroTV", s: "Entrez votre nom et votre code d'accès personnel.", nm: "Votre nom", needName: "Entrez votre nom.", go: "Entrer", note: "Votre activité de visionnage est enregistrée pour améliorer NioroTV.", bad: "Code invalide.", err: "Impossible de vérifier le code. Réessayez." }
+    : { t: "NioroTV Access", s: "Enter your name and your personal access code.", nm: "Your name", needName: "Please enter your name.", go: "Enter", note: "Your viewing activity is recorded to help improve NioroTV.", bad: "Invalid code.", err: "Could not verify the code. Try again." };
 
   const css = document.createElement("style");
   css.textContent = `#nioroGate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at top right,#260d54 0%,#0c041a 60%);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#f8fafc;padding:1rem}
@@ -19,10 +19,11 @@
   gate.id = "nioroGate";
   gate.style.display = "none";
   gate.innerHTML = `<div class="card"><span class="badge">NIORO TV</span><h2>${T.t}</h2><p>${T.s}</p>
+    <input id="gName" placeholder="${T.nm}" autocomplete="name" maxlength="30" style="text-transform:none;letter-spacing:0" />
     <input id="gCode" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" />
     <button id="gGo">${T.go}</button><div class="msg" id="gMsg"></div><div style="color:#a799c2;font-size:.75rem;margin-top:.8rem">${T.note}</div></div>`;
   document.body.appendChild(gate);
-  const msg = gate.querySelector("#gMsg"), input = gate.querySelector("#gCode");
+  const msg = gate.querySelector("#gMsg"), input = gate.querySelector("#gCode"), nameIn = gate.querySelector("#gName");
 
   const norm = (c) => c.replace(/[\s-]/g, "").toUpperCase();
   async function sha256(s) {
@@ -38,10 +39,11 @@
   }
 
   let opts = {};
-  function unlock(entry, code) {
-    try { localStorage.setItem("nioro_code", code); } catch (e) {}
+  function unlock(entry, code, who) {
+    try { localStorage.setItem("nioro_code", code); localStorage.setItem("nioro_name", who); } catch (e) {}
     gate.style.display = "none";
-    opts.onReady && opts.onReady({ id: entry.h.slice(0, 16), name: entry.name, isAdmin: !!entry.admin, signOut });
+    const label = who.toLowerCase() === entry.name.toLowerCase() ? who : (who + " · " + entry.name);
+    opts.onReady && opts.onReady({ id: entry.h.slice(0, 16), name: label.slice(0, 40), isAdmin: !!entry.admin, signOut });
   }
   function signOut() {
     try { localStorage.removeItem("nioro_code"); } catch (e) {}
@@ -49,19 +51,20 @@
   }
   async function submit() {
     msg.textContent = "";
-    const code = input.value;
+    const code = input.value, who = nameIn.value.trim().slice(0, 30);
+    if (who.length < 2) { msg.textContent = T.needName; return; }
     if (norm(code).length < 8) { msg.textContent = T.bad; return; }
     try {
       const entry = await lookup(code);
-      if (entry) unlock(entry, code); else msg.textContent = T.bad;
+      if (entry) unlock(entry, code, who); else msg.textContent = T.bad;
     } catch (e) { msg.textContent = T.err; }
   }
   gate.querySelector("#gGo").onclick = submit;
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
 
   async function boot() {
-    let saved = ""; try { saved = localStorage.getItem("nioro_code") || ""; } catch (e) {}
-    if (saved) { try { const entry = await lookup(saved); if (entry) return unlock(entry, saved); } catch (e) {} }
+    let saved = "", savedName = ""; try { saved = localStorage.getItem("nioro_code") || ""; savedName = localStorage.getItem("nioro_name") || ""; } catch (e) {}
+    if (saved && savedName) { try { const entry = await lookup(saved); if (entry) return unlock(entry, saved, savedName); } catch (e) {} }
     gate.style.display = "flex";
   }
   window.NioroAuth = { init(o) { opts = o || {}; boot(); } };
