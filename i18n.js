@@ -73,6 +73,10 @@
   add("It may work in Smarters Player Lite or VLC.", "Elle peut fonctionner dans Smarters Player Lite ou VLC.", "Potrebbe funzionare in Smarters Player Lite o VLC.");
   add("Stream unavailable", "Flux indisponible", "Flusso non disponibile");
   add("Try copying the URL into Smarters Player Lite or VLC.", "Essayez de copier l'URL dans Smarters Player Lite ou VLC.", "Prova a copiare l'URL in Smarters Player Lite o VLC.");
+  add("Channels that need Smarters / VLC", "Chaînes qui nécessitent Smarters / VLC", "Canali che richiedono Smarters / VLC");
+  add("Hide", "Masquer", "Nascondi");
+  add("Show", "Afficher", "Mostra");
+  add("SMARTERS", "SMARTERS", "SMARTERS");
   // Player
   add("Select any channel below to start watching", "Choisissez une chaîne ci-dessous pour regarder", "Scegli un canale qui sotto per guardare");
   add("Supports live HLS (.m3u8) streams directly in your browser", "Lecture directe des flux HLS (.m3u8) dans votre navigateur", "Riproduce flussi HLS (.m3u8) direttamente nel browser");

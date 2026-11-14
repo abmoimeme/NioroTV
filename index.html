@@ -468,6 +468,13 @@
               <button data-v="rows" onclick="setHomeView('rows')">Rows</button>
             </div>
           </div>
+          <div class="sp-section">
+            <div class="sp-label">Channels that need Smarters / VLC</div>
+            <div class="seg" id="setAppSeg">
+              <button data-a="0" onclick="setShowApp(false)">Hide</button>
+              <button data-a="1" onclick="setShowApp(true)">Show</button>
+            </div>
+          </div>
           <div class="sp-section" id="countrySection">
             <div class="sp-label">Countries to watch <span id="countrySummary" style="text-transform:none;letter-spacing:0"></span></div>
             <div class="seg" style="margin-bottom:.6rem">
@@ -1043,7 +1050,8 @@
 
     function runSearch() {
       const q = document.getElementById("searchInput").value.trim().toLowerCase();
-      const filtered = q ? uniq.filter(c => c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)) : uniq.slice(0, 60);
+      const pool = uniq.filter(c => showApp || !needsApp(c));
+      const filtered = q ? pool.filter(c => c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)) : pool.slice(0, 60);
       document.getElementById("searchCount").textContent = `Showing ${filtered.length} matching channels`;
       if (q && window.NioroTrack) NioroTrack.search(q, filtered.length);
       const grid = document.getElementById("searchResultsGrid");
@@ -1243,7 +1251,11 @@ jobs:
     let recent = (() => { try { return JSON.parse(LS.get("nioro_recent", "[]")); } catch (e) { return []; } })();
 
     let hiddenGroups = (() => { try { return new Set(JSON.parse(LS.get("nioro_hidden", "[]"))); } catch (e) { return new Set(); } })();
-    function shown(ch) { return !hiddenGroups.has(ch.group) && !(ch.country && hiddenGroups.has("Country: " + ch.country.toUpperCase())); }
+    // Channels on plain http:// cannot play in a browser on an https page; they work in Smarters/VLC.
+    const needsApp = (ch) => location.protocol === "https:" && /^http:\/\//i.test(ch.url);
+    let showApp = LS.get("nioro_showapp", "0") === "1";
+    function setShowApp(on) { showApp = on; LS.set("nioro_showapp", on ? "1" : "0"); guideLimit = 120; guideSel = 0; renderSwimlanes(); renderGuide(); paintCountries(); paintSettings(); if (document.getElementById("view-search").classList.contains("active")) runSearch(); }
+    function shown(ch) { return (showApp || !needsApp(ch)) && !hiddenGroups.has(ch.group) && !(ch.country && hiddenGroups.has("Country: " + ch.country.toUpperCase())); }
     function groupLabel(g) { return g.startsWith("Country: ") ? countryName(g) : g.replace(/^Category: /, ""); }
     const kindOrder = g => g.startsWith("Category: ") ? 0 : g.startsWith("Country: ") ? 1 : 2;
     function countryName(g) { const id = g.replace("Country: ", "").toLowerCase(); const p = PRESETS.countries.find(c => c.id === id); return p ? p.name : g.replace("Country: ", ""); }
@@ -1319,7 +1331,7 @@ jobs:
       const nm = document.createElement("div"); nm.className = "g-name"; nm.textContent = ch.name; nm.title = ch.name;
       const gp = document.createElement("div"); gp.className = "g-group"; gp.textContent = groupLabel(ch.group);
       txt.append(nm, gp);
-      const badge = document.createElement("span"); badge.className = "g-badge"; badge.textContent = "LIVE";
+      const badge = document.createElement("span"); badge.className = "g-badge"; badge.textContent = needsApp(ch) ? "SMARTERS" : "LIVE"; if (needsApp(ch)) { badge.style.background = "#475569"; badge.title = "Plays in Smarters Player Lite or VLC, not in the browser"; }
       info.append(txt, badge);
       row.append(num, logo, info);
       row.onclick = () => {
@@ -1392,6 +1404,7 @@ jobs:
       paintCountries();
       const l = (window.NioroLang && NioroLang.get && NioroLang.get()) || "en";
       document.querySelectorAll("#setLangSeg button").forEach(b => b.classList.toggle("on", b.dataset.l === l));
+      document.querySelectorAll("#setAppSeg button").forEach(b => b.classList.toggle("on", (b.dataset.a === "1") === showApp));
       document.querySelectorAll("#setViewSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === homeView));
     }
     function paintProfile() {
