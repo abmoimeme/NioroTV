@@ -164,5 +164,6 @@
       ],
       "allow_unknown_country": true
     }
-  }
+  },
+  "upgrade_https": true
 }

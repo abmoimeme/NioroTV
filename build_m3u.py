@@ -28,6 +28,33 @@ def check_stream_alive(url):
         except Exception:
             return False
 
+def https_works(http_url):
+    """Return the https:// version of a stream URL if it answers like the real stream, else None."""
+    https_url = "https://" + http_url[len("http://"):]
+    try:
+        req = urllib.request.Request(https_url, headers={"User-Agent": "Mozilla/5.0", "Range": "bytes=0-2048"})
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            if not (200 <= resp.status < 400):
+                return None
+            head = resp.read(2048)
+        if ".m3u8" in http_url.lower() and b"#EXTM3U" not in head[:512]:
+            return None  # an https page that is not the playlist (error page, parked domain...)
+        return https_url
+    except Exception:
+        return None
+
+def upgrade_to_https(candidates):
+    """Rewrite http:// streams to https:// when the secure version really works."""
+    todo = sorted({url for _, _, url in candidates if url.startswith("http://")})
+    if not todo:
+        return candidates
+    print(f"Checking https for {len(todo)} http streams...")
+    with ThreadPoolExecutor(max_workers=40) as executor:
+        results = list(executor.map(https_works, todo))
+    fixed = {u: r for u, r in zip(todo, results) if r}
+    print(f"Upgraded {len(fixed)} of {len(todo)} streams to https.")
+    return [(e, t, fixed.get(u, u)) for e, t, u in candidates]
+
 def parse_entries(raw_text, folder_label):
     lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
     entries = []
@@ -121,6 +148,9 @@ def main():
                     continue
                 seen_urls.add(key)
             candidates.append((extinf, extra_tags, stream_url))
+
+    if config.get("upgrade_https", False):
+        candidates = upgrade_to_https(candidates)
 
     if config.get("check_health", False):
         print(f"Health-checking {len(candidates)} streams...")
