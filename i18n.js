@@ -46,6 +46,9 @@
   add("Administrator", "Administrateur", "Amministratore");
   add("Open admin dashboard", "Ouvrir le tableau de bord admin", "Apri la dashboard admin");
   add("Lock / Sign out", "Verrouiller / Se déconnecter", "Blocca / Esci");
+  add("Countries to watch", "Pays à regarder", "Paesi da guardare");
+  add("Select all", "Tout sélectionner", "Seleziona tutto");
+  add("Clear all", "Tout effacer", "Deseleziona tutto");
   // Player
   add("Select any channel below to start watching", "Choisissez une chaîne ci-dessous pour regarder", "Scegli un canale qui sotto per guardare");
   add("Supports live HLS (.m3u8) streams directly in your browser", "Lecture directe des flux HLS (.m3u8) dans votre navigateur", "Riproduce flussi HLS (.m3u8) direttamente nel browser");
@@ -93,6 +96,8 @@
   const P = [ // [regex, fr, it]
     [/^(\d+) Unique Channels Loaded$/, "$1 chaînes uniques chargées", "$1 canali unici caricati"],
     [/^Connecting to (.+)\.\.\.$/, "Connexion à $1...", "Connessione a $1..."],
+    [/^(\d+) of (\d+) selected$/, "$1 sur $2 sélectionnés", "$1 di $2 selezionati"],
+    [/^🌍 Countries \((\d+)\/(\d+)\)$/, "🌍 Pays ($1/$2)", "🌍 Paesi ($1/$2)"],
     [/^(\d+) channels$/, "$1 chaînes", "$1 canali"],
     [/^Showing (\d+) matching channels$/, "$1 chaînes trouvées", "$1 canali trovati"],
     [/^⭐ My Favorites \((\d+)\)$/, "⭐ Mes favoris ($1)", "⭐ I miei preferiti ($1)"],
@@ -125,7 +130,7 @@
     const o = tr(v); const m = amap.get(el) || {}; m[a] = { orig: v, out: o }; amap.set(el, m); if (o !== v) el.setAttribute(a, o);
   }
   function walk(root) {
-    if (root.nodeType === 3) { if (!SKIP.test(root.parentNode.nodeName)) doText(root); return; }
+    if (root.nodeType === 3) { if (root.parentNode && !SKIP.test(root.parentNode.nodeName)) doText(root); return; }
     if (root.nodeType !== 1 || SKIP.test(root.nodeName)) return;
     if (root.id === "nioroLang") return;
     const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);

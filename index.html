@@ -467,6 +467,14 @@
               <button data-v="rows" onclick="setHomeView('rows')">Rows</button>
             </div>
           </div>
+          <div class="sp-section" id="countrySection">
+            <div class="sp-label">Countries to watch <span id="countrySummary" style="text-transform:none;letter-spacing:0"></span></div>
+            <div class="seg" style="margin-bottom:.6rem">
+              <button onclick="setAllCountries(true)">Select all</button>
+              <button onclick="setAllCountries(false)">Clear all</button>
+            </div>
+            <div id="countryList" style="display:grid;gap:.4rem"></div>
+          </div>
           <div class="sp-section">
             <div class="sp-label">Language</div>
             <div class="seg" id="setLangSeg">
@@ -535,6 +543,7 @@
           <div class="guide-main">
             <div class="guide-tools">
               <input id="guideFilter" type="search" placeholder="Filter channels" oninput="renderGuide()" />
+              <button class="btn btn-secondary" id="guideCountriesBtn" style="padding:.45rem .9rem;white-space:nowrap" onclick="openPanel('settings');document.getElementById('countrySection').scrollIntoView()">🌍 Countries</button>
               <span class="count" id="guideCount"></span>
             </div>
             <div class="guide-list" id="guideList"></div>
@@ -792,6 +801,7 @@
       document.getElementById("channelStats").textContent = `${allChannels.length} Unique Channels Loaded`;
       renderSwimlanes();
       renderGuide();
+      paintCountries();
       updateSyncFiles();
     }
 
@@ -801,11 +811,12 @@
 
       const groups = {};
       if (favorites.length > 0) {
-        const favChannels = allChannels.filter(c => favorites.includes(c.url));
+        const favChannels = allChannels.filter(c => favorites.includes(c.url) && shown(c));
         if (favChannels.length > 0) groups["⭐ My Favorites"] = favChannels;
       }
 
       for (const ch of allChannels) {
+        if (!shown(ch)) continue;
         if (!groups[ch.group]) groups[ch.group] = [];
         groups[ch.group].push(ch);
       }
@@ -1182,24 +1193,48 @@ jobs:
     let guideCat = "all", guideLimit = 120, guideSel = 0, guideRows = [];
     let recent = (() => { try { return JSON.parse(LS.get("nioro_recent", "[]")); } catch (e) { return []; } })();
 
+    let hiddenGroups = (() => { try { return new Set(JSON.parse(LS.get("nioro_hidden", "[]"))); } catch (e) { return new Set(); } })();
+    function shown(ch) { return !hiddenGroups.has(ch.group); }
+    function countryName(g) { const id = g.replace("Country: ", "").toLowerCase(); const p = PRESETS.countries.find(c => c.id === id); return p ? p.name : g.replace("Country: ", ""); }
+    function saveHidden() { LS.set("nioro_hidden", JSON.stringify([...hiddenGroups])); guideLimit = 120; guideSel = 0; if (!shownGroupExists(guideCat)) guideCat = "all"; renderSwimlanes(); renderGuide(); paintCountries(); }
+    function shownGroupExists(c) { return ["fav", "recent", "all"].includes(c) || !hiddenGroups.has(c); }
+    function toggleCountry(g, on) { if (on) hiddenGroups.delete(g); else hiddenGroups.add(g); saveHidden(); }
+    function setAllCountries(on) { countryGroups().forEach(g => on ? hiddenGroups.delete(g) : hiddenGroups.add(g)); saveHidden(); }
+    function countryGroups() { return [...new Set(allChannels.map(c => c.group).filter(g => g.startsWith("Country: ")))].sort((a, b) => countryName(a).localeCompare(countryName(b))); }
+    function paintCountries() {
+      const box = document.getElementById("countryList"); if (!box) return;
+      const counts = {}; allChannels.forEach(c => counts[c.group] = (counts[c.group] || 0) + 1);
+      box.innerHTML = "";
+      countryGroups().forEach(g => {
+        const l = document.createElement("label"); l.className = "chip-label";
+        const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = !hiddenGroups.has(g);
+        cb.onchange = () => toggleCountry(g, cb.checked);
+        const t = document.createElement("span"); t.textContent = countryName(g) + " (" + counts[g] + ")";
+        l.append(cb, t); box.appendChild(l);
+      });
+      const total = countryGroups().length, on = total - countryGroups().filter(g => hiddenGroups.has(g)).length;
+      const sum = document.getElementById("countrySummary"); if (sum) sum.textContent = on + " of " + total + " selected";
+      const gb = document.getElementById("guideCountriesBtn"); if (gb) gb.textContent = "🌍 Countries (" + on + "/" + total + ")";
+    }
     function chNumber(ch) { return allChannels.indexOf(ch) + 1; }
     function guideChannels() {
       let list;
-      if (guideCat === "fav") list = allChannels.filter(c => favorites.includes(c.url));
-      else if (guideCat === "recent") list = recent.map(u => allChannels.find(c => c.url === u)).filter(Boolean);
-      else if (guideCat === "all") list = allChannels;
-      else list = allChannels.filter(c => c.group === guideCat);
+      if (guideCat === "fav") list = allChannels.filter(c => favorites.includes(c.url) && shown(c));
+      else if (guideCat === "recent") list = recent.map(u => allChannels.find(c => c.url === u)).filter(c => c && shown(c));
+      else if (guideCat === "all") list = allChannels.filter(shown);
+      else list = allChannels.filter(c => c.group === guideCat && shown(c));
       const q = (document.getElementById("guideFilter").value || "").trim().toLowerCase();
       return q ? list.filter(c => c.name.toLowerCase().includes(q)) : list;
     }
     function renderGuideCats() {
       const box = document.getElementById("guideCats");
       const counts = {};
-      allChannels.forEach(c => counts[c.group] = (counts[c.group] || 0) + 1);
+      allChannels.filter(shown).forEach(c => counts[c.group] = (counts[c.group] || 0) + 1);
+      const vis = u => allChannels.some(c => c.url === u && shown(c));
       const cats = [
-        { id: "fav", label: "★ Favorites", n: favorites.filter(u => allChannels.some(c => c.url === u)).length, sep: false },
-        { id: "recent", label: "Recently Watched", n: recent.filter(u => allChannels.some(c => c.url === u)).length, sep: true },
-        { id: "all", label: "All Channels", n: allChannels.length },
+        { id: "fav", label: "★ Favorites", n: favorites.filter(vis).length, sep: false },
+        { id: "recent", label: "Recently Watched", n: recent.filter(vis).length, sep: true },
+        { id: "all", label: "All Channels", n: allChannels.filter(shown).length },
         ...Object.keys(counts).map(g => ({ id: g, label: g, n: counts[g] }))
       ];
       box.innerHTML = "";
@@ -1301,6 +1336,7 @@ jobs:
     }
     function closePanel() { document.getElementById("panelOverlay").classList.remove("open"); }
     function paintSettings() {
+      paintCountries();
       const l = (window.NioroLang && NioroLang.get && NioroLang.get()) || "en";
       document.querySelectorAll("#setLangSeg button").forEach(b => b.classList.toggle("on", b.dataset.l === l));
       document.querySelectorAll("#setViewSeg button").forEach(b => b.classList.toggle("on", b.dataset.v === homeView));
