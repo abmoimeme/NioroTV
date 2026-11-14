@@ -1,7 +1,50 @@
 {
-  "countries": ["sn", "gm", "gn", "gw", "ml", "mr", "cv", "ci", "bf", "bj", "tg", "gh", "ne", "ng", "lr", "sl", "us", "fr"],
-  "languages": ["fra", "eng"],
-  "categories": ["sports", "movies", "news"],
+  "countries": [
+    "sn",
+    "gm",
+    "gn",
+    "gw",
+    "ml",
+    "mr",
+    "cv",
+    "ci",
+    "bf",
+    "bj",
+    "tg",
+    "gh",
+    "ne",
+    "ng",
+    "lr",
+    "sl",
+    "us",
+    "fr"
+  ],
+  "languages": [
+    "fra",
+    "eng"
+  ],
+  "categories": [
+    "sports",
+    "movies",
+    "documentary",
+    "religious",
+    "kids",
+    "music",
+    "news",
+    "entertainment",
+    "comedy",
+    "series",
+    "culture",
+    "education",
+    "family"
+  ],
   "remove_duplicates": true,
-  "require_https": false
+  "require_https": false,
+  "category_countries": [
+    "sn",
+    "fr",
+    "it",
+    "us",
+    "uk"
+  ]
 }

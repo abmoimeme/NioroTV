@@ -49,6 +49,19 @@
   add("Countries to watch", "Pays à regarder", "Paesi da guardare");
   add("Select all", "Tout sélectionner", "Seleziona tutto");
   add("Clear all", "Tout effacer", "Deseleziona tutto");
+  add("Sports", "Sports", "Sport");
+  add("Movies", "Films", "Film");
+  add("Documentary", "Documentaires", "Documentari");
+  add("Religious", "Religion", "Religione");
+  add("Kids", "Enfants", "Bambini");
+  add("Music", "Musique", "Musica");
+  add("News", "Actualités", "Notizie");
+  add("Entertainment", "Divertissement", "Intrattenimento");
+  add("Comedy", "Comédie", "Commedia");
+  add("Series", "Séries", "Serie");
+  add("Culture", "Culture", "Cultura");
+  add("Education", "Éducation", "Istruzione");
+  add("Family", "Famille", "Famiglia");
   // Player
   add("Select any channel below to start watching", "Choisissez une chaîne ci-dessous pour regarder", "Scegli un canale qui sotto per guardare");
   add("Supports live HLS (.m3u8) streams directly in your browser", "Lecture directe des flux HLS (.m3u8) dans votre navigateur", "Riproduce flussi HLS (.m3u8) direttamente nel browser");

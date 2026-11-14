@@ -51,30 +51,48 @@ def parse_entries(raw_text, folder_label):
         i += 1
     return entries
 
+def entry_country(extinf):
+    """Country code from tvg-id like 'TF1.fr@SD' -> 'fr' (None if absent)."""
+    m = re.search(r'tvg-id="([^"]*)"', extinf)
+    if not m:
+        return None
+    ident = m.group(1).split("@")[0]
+    if "." not in ident:
+        return None
+    return ident.rsplit(".", 1)[1].lower()
+
 def main():
     with open("config.json", "r", encoding="utf-8") as f:
         config = json.load(f)
 
     sources = []
     for c in config.get("countries", []):
-        sources.append((f"{BASE_URL}/countries/{c.lower()}.m3u", f"Country: {c.upper()}"))
+        sources.append((f"{BASE_URL}/countries/{c.lower()}.m3u", f"Country: {c.upper()}", "country"))
     for lang in config.get("languages", []):
-        sources.append((f"{BASE_URL}/languages/{lang.lower()}.m3u", f"Language: {lang.upper()}"))
+        sources.append((f"{BASE_URL}/languages/{lang.lower()}.m3u", f"Language: {lang.upper()}", "language"))
     for cat in config.get("categories", []):
-        sources.append((f"{BASE_URL}/categories/{cat.lower()}.m3u", f"Category: {cat.capitalize()}"))
+        sources.append((f"{BASE_URL}/categories/{cat.lower()}.m3u", f"Category: {cat.capitalize()}", "category"))
 
     seen_urls = set()
     candidates = []
 
-    for url, label in sources:
+    # Category lists are global; keep only the channels from these countries.
+    cat_countries = {c.lower() for c in config.get("category_countries", [])}
+
+    for url, label, kind in sources:
         raw = fetch_m3u(url)
         for extinf, extra_tags, stream_url in parse_entries(raw, label):
             if config.get("require_https") and not stream_url.startswith("https://"):
                 continue
+            if kind == "category" and cat_countries and entry_country(extinf) not in cat_countries:
+                continue
             if config.get("remove_duplicates", True):
-                if stream_url in seen_urls:
+                # A channel appears once per kind (country / language / category),
+                # so it can sit under both "Country: US" and "Category: Sports".
+                key = (kind, stream_url)
+                if key in seen_urls:
                     continue
-                seen_urls.add(stream_url)
+                seen_urls.add(key)
             candidates.append((extinf, extra_tags, stream_url))
 
     if config.get("check_health", False):

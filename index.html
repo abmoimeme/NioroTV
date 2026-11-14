@@ -693,28 +693,31 @@
     const BASE_IPTV = "https://iptv-org.github.io/iptv";
     const PRESETS = {
       countries: [
-        { id: "sn", name: "Senegal" }, { id: "gm", name: "Gambia" }, { id: "gn", name: "Guinea" }, { id: "gw", name: "Guinea-Bissau" }, { id: "ml", name: "Mali" }, { id: "mr", name: "Mauritania" }, { id: "cv", name: "Cabo Verde" }, { id: "ci", name: "Côte d'Ivoire" }, { id: "bf", name: "Burkina Faso" }, { id: "bj", name: "Benin" }, { id: "tg", name: "Togo" }, { id: "gh", name: "Ghana" }, { id: "ne", name: "Niger" }, { id: "ng", name: "Nigeria" }, { id: "lr", name: "Liberia" }, { id: "sl", name: "Sierra Leone" }, { id: "us", name: "USA" }, { id: "fr", name: "France" }, { id: "uk", name: "United Kingdom" }, { id: "ca", name: "Canada" }, { id: "ma", name: "Morocco" }
+        { id: "sn", name: "Senegal" }, { id: "gm", name: "Gambia" }, { id: "gn", name: "Guinea" }, { id: "gw", name: "Guinea-Bissau" }, { id: "ml", name: "Mali" }, { id: "mr", name: "Mauritania" }, { id: "cv", name: "Cabo Verde" }, { id: "ci", name: "Côte d'Ivoire" }, { id: "bf", name: "Burkina Faso" }, { id: "bj", name: "Benin" }, { id: "tg", name: "Togo" }, { id: "gh", name: "Ghana" }, { id: "ne", name: "Niger" }, { id: "ng", name: "Nigeria" }, { id: "lr", name: "Liberia" }, { id: "sl", name: "Sierra Leone" }, { id: "us", name: "USA" }, { id: "fr", name: "France" }, { id: "uk", name: "United Kingdom" }, { id: "ca", name: "Canada" }, { id: "ma", name: "Morocco" }, { id: "it", name: "Italy" }
       ],
       languages: [
         { id: "fra", name: "French" }, { id: "eng", name: "English" },
         { id: "wol", name: "Wolof" }, { id: "ara", name: "Arabic" }, { id: "spa", name: "Spanish" }
       ],
       categories: [
-        { id: "sports", name: "Sports" }, { id: "movies", name: "Movies" },
-        { id: "news", name: "News" }, { id: "general", name: "General" },
-        { id: "music", name: "Music" }, { id: "documentary", name: "Documentary" }
+        { id: "sports", name: "Sports" }, { id: "movies", name: "Movies" }, { id: "documentary", name: "Documentary" },
+        { id: "religious", name: "Religion" }, { id: "kids", name: "Kids" }, { id: "music", name: "Music" },
+        { id: "news", name: "News" }, { id: "entertainment", name: "Entertainment" }, { id: "comedy", name: "Comedy" },
+        { id: "series", name: "Series" }, { id: "culture", name: "Culture" }, { id: "education", name: "Education" },
+        { id: "family", name: "Family" }, { id: "general", name: "General" }
       ]
     };
 
     const config = {
       countries: ["sn", "gm", "gn", "gw", "ml", "mr", "cv", "ci", "bf", "bj", "tg", "gh", "ne", "ng", "lr", "sl", "us", "fr"],
       languages: ["fra", "eng"],
-      categories: ["sports", "movies", "news"],
+      categories: ["sports", "movies", "documentary", "religious", "kids", "music", "news", "entertainment", "comedy", "series", "culture", "education", "family"],
+      category_countries: ["sn", "fr", "it", "us", "uk"],
       remove_duplicates: true,
       require_https: false
     };
 
-    let allChannels = [];
+    let allChannels = [], uniq = [], numByUrl = {};
     let favorites = JSON.parse(localStorage.getItem("roku_iptv_favs") || "[]");
     let currentChannel = null;
     let hlsInstance = null;
@@ -753,6 +756,9 @@
           const nameMatch = info.split(",").pop().trim() || "Unknown Channel";
           const logoMatch = info.match(/tvg-logo="([^"]*)"/);
           const logo = logoMatch ? logoMatch[1] : "";
+          const idMatch = info.match(/tvg-id="([^"]*)"/);
+          const ident = idMatch ? idMatch[1].split("@")[0] : "";
+          const country = ident.includes(".") ? ident.split(".").pop().toLowerCase() : "";
           let j = i + 1;
           while (j < lines.length && lines[j].startsWith("#")) j++;
           if (j < lines.length && lines[j].startsWith("http")) {
@@ -760,6 +766,7 @@
               name: nameMatch,
               logo,
               group: groupLabel,
+              country,
               url: lines[j],
               rawExtinf: info
             });
@@ -773,32 +780,42 @@
     async function rebuildLineup() {
       document.getElementById("channelStats").textContent = "Fetching live IPTV-org streams...";
       const sources = [
-        ...config.countries.map(c => ({ url: `${BASE_IPTV}/countries/${c}.m3u`, label: `Country: ${c.toUpperCase()}` })),
-        ...config.languages.map(l => ({ url: `${BASE_IPTV}/languages/${l}.m3u`, label: `Language: ${l.toUpperCase()}` })),
-        ...config.categories.map(cat => ({ url: `${BASE_IPTV}/categories/${cat}.m3u`, label: `Category: ${cat.charAt(0).toUpperCase() + cat.slice(1)}` }))
+        ...config.countries.map(c => ({ url: `${BASE_IPTV}/countries/${c}.m3u`, label: `Country: ${c.toUpperCase()}`, kind: "country", code: c })),
+        ...config.languages.map(l => ({ url: `${BASE_IPTV}/languages/${l}.m3u`, label: `Language: ${l.toUpperCase()}`, kind: "language" })),
+        ...config.categories.map(cat => ({ url: `${BASE_IPTV}/categories/${cat}.m3u`, label: `Category: ${cat.charAt(0).toUpperCase() + cat.slice(1)}`, kind: "category" }))
       ];
 
       const seen = new Set();
-      const merged = [];
-
-      await Promise.all(sources.map(async src => {
+      const catCountries = (config.category_countries || []).map(c => c.toLowerCase());
+      const results = await Promise.all(sources.map(async src => {
         try {
           const res = await fetch(src.url);
-          if (!res.ok) return;
-          const text = await res.text();
-          const parsed = parseM3U(text, src.label);
-          for (const ch of parsed) {
-            if (config.remove_duplicates && seen.has(ch.url)) continue;
-            seen.add(ch.url);
-            merged.push(ch);
-          }
+          if (!res.ok) return [];
+          const parsed = parseM3U(await res.text(), src.label);
+          parsed.forEach(ch => { ch.kind = src.kind; if (src.kind === "country") ch.country = src.code.toLowerCase(); });
+          return parsed;
         } catch (e) {
           console.warn("Failed source:", src.url);
+          return [];
         }
       }));
+      // Keep the configured source order (countries, languages, categories) so results are stable.
+      // A channel shows once per kind, so it can sit under both "Country: US" and "Category: Sports".
+      const merged = [];
+      for (const list of results) {
+        for (const ch of list) {
+          if (ch.kind === "category" && catCountries.length && !catCountries.includes(ch.country)) continue;
+          const key = ch.kind + "|" + ch.url;
+          if (config.remove_duplicates && seen.has(key)) continue;
+          seen.add(key);
+          merged.push(ch);
+        }
+      }
 
       allChannels = merged;
-      document.getElementById("channelStats").textContent = `${allChannels.length} Unique Channels Loaded`;
+      const seenU = new Set(); uniq = []; numByUrl = {};
+      for (const ch of allChannels) if (!seenU.has(ch.url)) { seenU.add(ch.url); uniq.push(ch); numByUrl[ch.url] = uniq.length; }
+      document.getElementById("channelStats").textContent = `${uniq.length} Unique Channels Loaded`;
       renderSwimlanes();
       renderGuide();
       paintCountries();
@@ -995,7 +1012,7 @@
 
     function runSearch() {
       const q = document.getElementById("searchInput").value.trim().toLowerCase();
-      const filtered = q ? allChannels.filter(c => c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)) : allChannels.slice(0, 60);
+      const filtered = q ? uniq.filter(c => c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)) : uniq.slice(0, 60);
       document.getElementById("searchCount").textContent = `Showing ${filtered.length} matching channels`;
       if (q && window.NioroTrack) NioroTrack.search(q, filtered.length);
       const grid = document.getElementById("searchResultsGrid");
@@ -1194,16 +1211,19 @@ jobs:
     let recent = (() => { try { return JSON.parse(LS.get("nioro_recent", "[]")); } catch (e) { return []; } })();
 
     let hiddenGroups = (() => { try { return new Set(JSON.parse(LS.get("nioro_hidden", "[]"))); } catch (e) { return new Set(); } })();
-    function shown(ch) { return !hiddenGroups.has(ch.group); }
+    function shown(ch) { return !hiddenGroups.has(ch.group) && !(ch.country && hiddenGroups.has("Country: " + ch.country.toUpperCase())); }
+    function groupLabel(g) { return g.startsWith("Country: ") ? countryName(g) : g.replace(/^Category: /, ""); }
+    const kindOrder = g => g.startsWith("Category: ") ? 0 : g.startsWith("Country: ") ? 1 : 2;
     function countryName(g) { const id = g.replace("Country: ", "").toLowerCase(); const p = PRESETS.countries.find(c => c.id === id); return p ? p.name : g.replace("Country: ", ""); }
     function saveHidden() { LS.set("nioro_hidden", JSON.stringify([...hiddenGroups])); guideLimit = 120; guideSel = 0; if (!shownGroupExists(guideCat)) guideCat = "all"; renderSwimlanes(); renderGuide(); paintCountries(); }
     function shownGroupExists(c) { return ["fav", "recent", "all"].includes(c) || !hiddenGroups.has(c); }
     function toggleCountry(g, on) { if (on) hiddenGroups.delete(g); else hiddenGroups.add(g); saveHidden(); }
     function setAllCountries(on) { countryGroups().forEach(g => on ? hiddenGroups.delete(g) : hiddenGroups.add(g)); saveHidden(); }
-    function countryGroups() { return [...new Set(allChannels.map(c => c.group).filter(g => g.startsWith("Country: ")))].sort((a, b) => countryName(a).localeCompare(countryName(b))); }
+    function countryGroups() { return [...new Set(allChannels.map(c => c.country ? "Country: " + c.country.toUpperCase() : c.group).filter(g => g.startsWith("Country: ")))].sort((a, b) => countryName(a).localeCompare(countryName(b))); }
     function paintCountries() {
       const box = document.getElementById("countryList"); if (!box) return;
-      const counts = {}; allChannels.forEach(c => counts[c.group] = (counts[c.group] || 0) + 1);
+      const sets = {}; uniq.forEach(c => { const g = c.country ? "Country: " + c.country.toUpperCase() : c.group; (sets[g] = sets[g] || new Set()).add(c.url); });
+      const counts = {}; Object.keys(sets).forEach(g => counts[g] = sets[g].size);
       box.innerHTML = "";
       countryGroups().forEach(g => {
         const l = document.createElement("label"); l.className = "chip-label";
@@ -1216,12 +1236,12 @@ jobs:
       const sum = document.getElementById("countrySummary"); if (sum) sum.textContent = on + " of " + total + " selected";
       const gb = document.getElementById("guideCountriesBtn"); if (gb) gb.textContent = "🌍 Countries (" + on + "/" + total + ")";
     }
-    function chNumber(ch) { return allChannels.indexOf(ch) + 1; }
+    function chNumber(ch) { return numByUrl[ch.url] || 0; }
     function guideChannels() {
       let list;
-      if (guideCat === "fav") list = allChannels.filter(c => favorites.includes(c.url) && shown(c));
+      if (guideCat === "fav") list = uniq.filter(c => favorites.includes(c.url) && shown(c));
       else if (guideCat === "recent") list = recent.map(u => allChannels.find(c => c.url === u)).filter(c => c && shown(c));
-      else if (guideCat === "all") list = allChannels.filter(shown);
+      else if (guideCat === "all") list = uniq.filter(shown);
       else list = allChannels.filter(c => c.group === guideCat && shown(c));
       const q = (document.getElementById("guideFilter").value || "").trim().toLowerCase();
       return q ? list.filter(c => c.name.toLowerCase().includes(q)) : list;
@@ -1230,12 +1250,13 @@ jobs:
       const box = document.getElementById("guideCats");
       const counts = {};
       allChannels.filter(shown).forEach(c => counts[c.group] = (counts[c.group] || 0) + 1);
-      const vis = u => allChannels.some(c => c.url === u && shown(c));
+      const gnames = Object.keys(counts).sort((a, b) => kindOrder(a) - kindOrder(b) || groupLabel(a).localeCompare(groupLabel(b)));
+      const vis = u => uniq.some(c => c.url === u && shown(c));
       const cats = [
         { id: "fav", label: "★ Favorites", n: favorites.filter(vis).length, sep: false },
         { id: "recent", label: "Recently Watched", n: recent.filter(vis).length, sep: true },
-        { id: "all", label: "All Channels", n: allChannels.filter(shown).length },
-        ...Object.keys(counts).map(g => ({ id: g, label: g, n: counts[g] }))
+        { id: "all", label: "All Channels", n: uniq.filter(shown).length },
+        ...gnames.map(g => ({ id: g, label: groupLabel(g), n: counts[g] }))
       ];
       box.innerHTML = "";
       cats.forEach(c => {
@@ -1264,7 +1285,7 @@ jobs:
       const info = document.createElement("div"); info.className = "g-info";
       const txt = document.createElement("div"); txt.style.minWidth = 0;
       const nm = document.createElement("div"); nm.className = "g-name"; nm.textContent = ch.name; nm.title = ch.name;
-      const gp = document.createElement("div"); gp.className = "g-group"; gp.textContent = ch.group;
+      const gp = document.createElement("div"); gp.className = "g-group"; gp.textContent = groupLabel(ch.group);
       txt.append(nm, gp);
       const badge = document.createElement("span"); badge.className = "g-badge"; badge.textContent = "LIVE";
       info.append(txt, badge);
